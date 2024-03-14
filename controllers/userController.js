@@ -131,9 +131,13 @@ exports.login = catchAsyncError(async (req, res, next) => {
     return next(new ErrorHandler("Enter Email and Password"));
   }
 
-  const user = await userModel.findOne({ where: { email: email, isVerified: true } });
-  if (!user) {
-    return next(new ErrorHandler("User not found"));
+  const user = await userModel.findOne({ where: { email} });
+  if(!user) {
+    return next(new ErrorHandler("User not found", 404));
+  }
+  
+  if(!user.isVerified) {
+    return next(new ErrorHandler("Verify OTP.", 403));
   }
 
   const isPasswordMatched = await user.comparePassword(password);
@@ -190,12 +194,13 @@ exports.BookService = catchAsyncError(async (req, res, next) => {
 });
 
 exports.forgotPassword = catchAsyncError(async (req, res, next) => {
-  console.log("forgot password", req.body.email);
-  if (!req.body.email) {
+  console.log("forgot password", req.body);
+  const { email } = req.body;
+  if (!email) {
     return next(new ErrorHandler("Please provide a valid email.", 400));
   }
 
-  const user = await userModel.findOne({ where: { email: req.body.email } });
+  const user = await userModel.findOne({ where: { email } });
   if (!user) {
     return next(new ErrorHandler("User not found", 404));
   }
@@ -203,8 +208,7 @@ exports.forgotPassword = catchAsyncError(async (req, res, next) => {
   // get resetPassword OTP
   const otp = generateOTP();
   await otpModel.create({
-    otp: otp,
-    userId: user.dataValues.id,
+    otp, email, userId: user.id,
   });
 
   const message = `<b>Your password reset OTP is :- <h2>${otp}</h2></b><div>If you have not requested this email then, please ignore it.</div>`;
