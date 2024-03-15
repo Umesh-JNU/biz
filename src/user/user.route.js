@@ -1,6 +1,6 @@
 var express = require("express");
 var router = express.Router();
-const { auth, authRole } = require("../middlewares/auth");
+const { auth, authRole } = require("../../middlewares/auth");
 const {
   register,
   login,
@@ -17,8 +17,8 @@ const {
   getAlluser,
   deleteAccount,
   resendOTP,
-} = require("../controllers/userController");
-const { upload } = require("../utils/s3");
+} = require("./user.controller");
+const { upload } = require("../../utils/s3");
 
 router.post("/register", upload.single("image"), register);
 router.post("/verify-registerOtp", verifyRegisterOTP);

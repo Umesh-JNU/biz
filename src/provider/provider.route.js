@@ -1,3 +1,7 @@
+var express = require("express");
+var router = express.Router();
+const { auth } = require("../../middlewares/auth");
+
 const {
   register,
   login,
@@ -8,11 +12,10 @@ const {
   changePassword,
   updateProfile,
   deleteAccount,
-} = require("../controllers/providerController");
-const { auth } = require("../middlewares/auth");
-const { upload } = require("../utils/s3");
-var express = require("express");
-var router = express.Router();
+  resendOTP,
+} = require("./provider.controller");
+
+const { upload } = require("../../utils/s3");
 const uploadFiles = upload.fields([
   { name: "image", maxCount: 1 },
   { name: "pdf", maxCount: 1 },
@@ -21,6 +24,7 @@ const uploadFiles = upload.fields([
 router.post("/register", uploadFiles, register);
 router.post("/verify-registerOtp", verifyRegisterOTP);
 router.post("/login", login);
+router.put("/resend-otp", resendOTP);
 router.get("/profile", auth, getProfile);
 router.post("/forgot-password", forgotPassword);
 router.post("/verify-otp", verifyOTP);

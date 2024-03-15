@@ -2,7 +2,7 @@ const multer = require("multer");
 const ErrorHandler = require("../utils/errorHandler");
 
 module.exports = (err, req, res, next) => {
-	console.log({err});
+	console.log({ err });
 	err.message = err.message || "Internal Server Error";
 
 	if (err instanceof multer.MulterError) {
@@ -26,12 +26,12 @@ module.exports = (err, req, res, next) => {
 
 	if (err.name === "SequelizeValidationError") {
 		let errors = Object.values(err.errors).map((el) => {
-			console.log({el})
+			console.log({ el })
 			let e;
 			if (el.validatorKey === 'notEmpty' || el.validatorKey === 'notNull' || el.validatorKey === 'is_null') e = el.message;
 			else e = el.message;
 
-			const er = JSON.stringify({	[el.path]: e});
+			const er = JSON.stringify({ [el.path]: e });
 			console.log(er);
 			return er
 		});
@@ -42,18 +42,15 @@ module.exports = (err, req, res, next) => {
 
 	// sequelize duplicate key error
 	if (err.name === "SequelizeUniqueConstraintError") {
-		let errors = Object.values(err.errors).map((el) => {
-			console.log({ el });
-			if (el.path === "email") {
-				return JSON.stringify({
-					[el.path]: "Email is already registered.",
-				});
-			}
+		const { path } = err.errors[0];
+		switch (path) {
+			case "categoryName":
+				err = new ErrorHandler("Category already exists. Category name must be unique.", 400);
+				break;
 
-			return JSON.stringify({ [el.path]: el.message })
-		});
-
-		err = new ErrorHandler(errors, 400);
+			default:
+				break;
+		}
 	}
 
 	// wrong jwt error

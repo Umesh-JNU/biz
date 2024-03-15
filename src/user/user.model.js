@@ -1,7 +1,7 @@
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const { DataTypes } = require("sequelize");
-const { db } = require("../config/config");
+const { db } = require("../../config/database");
 
 const validateEmail = (email) => {
   var re = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
@@ -112,7 +112,7 @@ const userLog = db.define(
 );
 
 const WishList = db.define(
-  "Wish List",
+  "WishList",
   {
     userId: {
       type: DataTypes.INTEGER,
@@ -184,11 +184,5 @@ otpModel.prototype.isValid = async function (givenOTP) {
   // Check if the time difference is within the OTP validity duration
   return timeDifference <= otpValidityDuration;
 };
-
-userModel.hasMany(userLog, { foreignKey: "userId" });
-userLog.belongsTo(userModel, { foreignKey: "userId" });
-
-userModel.hasOne(otpModel, { foreignKey: "userId", as: "otp" });
-otpModel.belongsTo(userModel, { foreignKey: "userId", as: "user" });
 
 module.exports = { userModel, userLog, otpModel, WishList };

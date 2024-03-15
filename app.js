@@ -17,17 +17,15 @@ app.use(
   })
 );
 
-var userRouter = require("./routes/userRouter");
-var serviceRouter = require("./routes/serviceRouter");
-var adminRouter = require("./routes/adminRouter");
-var providerRouter = require("./routes/providerRouter");
+const { userRoute, providerRoute, categoryRoute, serviceRoute, adminRoute } = require('./src');
 
 app.get("/", (req, res, next) => res.json({ message: "Server is running" }));
 
-app.use("/api/users", userRouter);
-app.use("/api/service", serviceRouter);
-app.use("/api/admin", adminRouter);
-app.use("/api/providers", providerRouter);
+app.use("/api/users", userRoute);
+app.use("/api/admin", adminRoute);
+app.use("/api/providers", providerRoute);
+app.use("/api/category", categoryRoute);
+app.use("/api/service", serviceRoute);
 
 app.all("*", async (req, res) => {
   res.status(404).json({

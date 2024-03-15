@@ -1,6 +1,7 @@
 const jwt = require("jsonwebtoken");
-const { userModel } = require("../models/userModel");
 const ErrorHandler = require("../utils/errorHandler");
+const { userModel } = require("../src/user/user.model");
+const { providerModel } = require("../src/provider/provider.model");
 
 exports.auth = async (req, res, next) => {
   console.log(req.headers.authorization);
@@ -42,6 +43,25 @@ exports.onlyAdmin = async (req, res, next) => {
       return next(new ErrorHandler("Invalid token. User not found.", 404));
 
     if (user.role !== "Admin") {
+      return next(new ErrorHandler("Restricted.", 401));
+    }
+
+    next();
+  } catch (error) {
+    return next(new ErrorHandler(error));
+  }
+};
+
+exports.onlyProvider = async (req, res, next) => {
+  try {
+    const { userId } = req;
+    const provider = await providerModel.findByPk(userId);
+    console.log(provider);
+    console.log(provider.role);
+    if (!provider)
+      return next(new ErrorHandler("Invalid token. Provider not found.", 404));
+
+    if (provider.role !== "Provider") {
       return next(new ErrorHandler("Restricted.", 401));
     }
 

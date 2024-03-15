@@ -6,8 +6,8 @@ const dialect = process.env.DIALECT;
 const host = process.env.HOST;
 console.log({ database, username, password, host, dialect });
 
-const sequelize = new Sequelize(process.env.URI);
-
+// const sequelize = new Sequelize(process.env.URI);
+const sequelize = new Sequelize(database, username, password, { host, dialect })
 // const sequelize = new Sequelize({
 //   dialect: "sqlite",
 //   storage: "../employee.db",

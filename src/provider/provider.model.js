@@ -1,14 +1,34 @@
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const { DataTypes } = require("sequelize");
-const { db } = require("../config/config");
-const { serviceModel } = require("./serviceModel");
-const { otpModel } = require("./userModel");
+const { db } = require("../../config/database");
 
 const validateEmail = (email) => {
   var re = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
   return re.test(email);
 };
+
+const proServiceModel = db.define("ProService", {
+  desc: {
+    type: DataTypes.TEXT,
+    allowNull: false,
+    validate: {
+      notEmpty: "Please provide service description",
+      notNull: "Please provide service description",
+    }
+  },
+  charge: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    validate: {
+      isNumeric: true,
+      min: {
+        args: [1],
+        msg: "Service charge must be positive"
+      }
+    }
+  }
+});
 
 const providerModel = db.define("Providers", {
   email: {
@@ -48,7 +68,10 @@ const providerModel = db.define("Providers", {
       notEmpty: { msg: "Name is required" },
     },
   },
-
+  isOffice: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false
+  },
   fullname: {
     type: DataTypes.STRING,
     allowNull: false,
@@ -132,13 +155,4 @@ providerModel.prototype.getJWTToken = function () {
   //   });
 };
 
-providerModel.hasOne(serviceModel, { foreignKey: "providerId", as: "service" });
-serviceModel.belongsTo(providerModel, {
-  foreignKey: "providerId",
-  as: "provider",
-});
-
-providerModel.hasOne(otpModel, { foreignKey: "providerId", as: "otp" });
-otpModel.belongsTo(providerModel, { foreignKey: "providerId", as: "provider" });
-
-module.exports = { providerModel };
+module.exports = { providerModel, proServiceModel };

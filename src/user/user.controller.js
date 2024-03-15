@@ -1,16 +1,17 @@
 const bcrypt = require("bcryptjs");
-const ErrorHandler = require("../utils/errorHandler");
-const catchAsyncError = require("../utils/catchAsyncError");
+const ErrorHandler = require("../../utils/errorHandler");
+const catchAsyncError = require("../../utils/catchAsyncError");
 const {
   userModel,
   userLog,
   otpModel,
   WishList,
-} = require("../models/userModel");
-const generateOTP = require("../utils/otpGenerator");
-const { s3Uploadv2 } = require("../utils/s3");
-const sendEmail = require("../utils/sendEmail");
+} = require("./user.model");
+const { s3Uploadv2 } = require("../../utils/s3");
+const sendEmail = require("../../utils/sendEmail");
+const generateOTP = require("../../utils/otpGenerator");
 
+const ROLE = "User";
 const getMsg = (otp) => {
   return `<html lang="en">
   <head>
@@ -44,6 +45,10 @@ const getMsg = (otp) => {
 exports.register = catchAsyncError(async (req, res, next) => {
   console.log("register user", req.body);
   const { email, password } = req.body;
+  req.body.role = ROLE;
+  if (!email || !password) {
+    return next(new ErrorHandler("Email and password is required.", 400));
+  }
 
   var user = await userModel.findOne({ where: { email } });
   console.log("isUserEXIST", { user, isVerified: user?.isVerified })
@@ -131,12 +136,12 @@ exports.login = catchAsyncError(async (req, res, next) => {
     return next(new ErrorHandler("Enter Email and Password"));
   }
 
-  const user = await userModel.findOne({ where: { email} });
-  if(!user) {
+  const user = await userModel.findOne({ where: { email, role: ROLE } });
+  if (!user) {
     return next(new ErrorHandler("User not found", 404));
   }
-  
-  if(!user.isVerified) {
+
+  if (!user.isVerified) {
     return next(new ErrorHandler("Verify OTP.", 403));
   }
 
@@ -223,7 +228,7 @@ exports.forgotPassword = catchAsyncError(async (req, res, next) => {
     res.status(200).json({ message: "OTP email sent" });
   } catch (error) {
     await otpModel.destroy({
-      where: { otp: user.dataValues.id, userId: user.dataValues.id },
+      where: { otp, userId: user.id },
     });
     return next(new ErrorHandler(error.message, 500));
   }
@@ -358,3 +363,9 @@ exports.deleteAccount = catchAsyncError(async (req, res, next) => {
     .status(200)
     .json({ success: true, message: "User destroyed successfully" });
 });
+
+// For Admin
+exports.getAllUser = catchAsyncError(async (req, res, next) => { });
+exports.getUser = catchAsyncError(async (req, res, next) => { });
+exports.updateUser = catchAsyncError(async (req, res, next) => { });
+exports.deleteUser = catchAsyncError(async (req, res, next) => { });
