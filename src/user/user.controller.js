@@ -42,6 +42,20 @@ const getMsg = (otp) => {
   </html>`;
 };
 
+const storeOTP = async ({ otp, email, userId }) => {
+  console.log({ otp, email, userId });
+
+  const otpInstance = await otpModel.findOne({ where: { email, userId } });
+  if (!otpInstance) {
+    await otpModel.create({
+      otp, email, userId
+    });
+  } else {
+    otpInstance.otp = otp;
+    await otpInstance.save();
+  }
+}
+
 exports.register = catchAsyncError(async (req, res, next) => {
   console.log("register user", req.body);
   const { email, password } = req.body;
@@ -80,12 +94,7 @@ exports.register = catchAsyncError(async (req, res, next) => {
   }
 
   const otp = generateOTP();
-
-  await otpModel.create({
-    otp,
-    email,
-    userId: user.id,
-  });
+  await storeOTP({ otp, email, userId: user.id });
 
   try {
     const message = getMsg(otp);
@@ -166,17 +175,7 @@ exports.resendOTP = catchAsyncError(async (req, res, next) => {
   }
 
   const otp = generateOTP();
-
-  let otpInstance = await otpModel.findOne({ where: { email, userId: user.id } });
-  console.log({ otpInstance, user: user.toJSON() });
-  if (!otpInstance) {
-    otpInstance = await otpModel.create({
-      email, userId: user.id, otp
-    })
-  } else {
-    otpInstance.otp = otp;
-    await otpInstance.save();
-  }
+  await storeOTP({ otp, email, userId: user.id });
 
   try {
     const message = getMsg(otp);
@@ -213,15 +212,7 @@ exports.forgotPassword = catchAsyncError(async (req, res, next) => {
 
   // get resetPassword OTP
   const otp = generateOTP();
-  let otpInstance = await otpModel.findOne({ where: { email, userId: user.id } });
-  if (!otpInstance) {
-    otpInstance = await otpModel.create({
-      email, userId: user.id, otp
-    })
-  } else {
-    otpInstance.otp = otp;
-    await otpInstance.save();
-  }
+  await storeOTP({ otp, email, userId: user.id });
 
   const message = `<b>Your password reset OTP is :- <h2>${otp}</h2></b><div>If you have not requested this email then, please ignore it.</div>`;
 

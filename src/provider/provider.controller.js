@@ -40,6 +40,20 @@ const getMsg = (otp) => {
   </html>`;
 }
 
+const storeOTP = async ({ otp, email, providerId }, transaction) => {
+  console.log({ otp, email, providerId }, transaction);
+
+  const otpInstance = await otpModel.findOne({ where: { email, providerId } });
+  if (!otpInstance) {
+    await otpModel.create({
+      otp, email, providerId
+    }, { transaction });
+  } else {
+    otpInstance.otp = otp;
+    await otpInstance.save({ transaction });
+  }
+}
+
 exports.register = catchAsyncError(async (req, res, next) => {
   console.log("register provider", req.body);
   const { services, categories, email, password } = req.body;
@@ -99,12 +113,7 @@ exports.register = catchAsyncError(async (req, res, next) => {
     // await provider.setServices(services, { transaction });
 
     const otp = generateOTP();
-    // console.log({ provider, otp })
-    await otpModel.create({
-      otp,
-      email,
-      providerId: provider.id,
-    }, { transaction });
+    await storeOTP({ otp, email, providerId: provider.id }, transaction);
 
     const message = getMsg(otp);
     await sendEmail({
@@ -188,16 +197,7 @@ exports.resendOTP = catchAsyncError(async (req, res, next) => {
   }
 
   const otp = generateOTP();
-  
-  let otpInstance = await otpModel.findOne({ where: { email, providerId: provider.id } });
-  if (!otpInstance) {
-    otpInstance = await otpModel.create({
-      email, providerId: provider.id, otp
-    })
-  } else {
-    otpInstance.otp = otp;
-    await otpInstance.save();
-  }
+  await storeOTP({ otp, email, providerId: provider.id });
 
   try {
     const message = getMsg(otp);
@@ -227,6 +227,9 @@ exports.getProfile = catchAsyncError(async (req, res, next) => {
       "document",
       "country_code",
       "profileImage",
+      "facebook",
+      "instagram",
+      "website",
     ],
   });
   res.status(200).json({ success: true, provider });
@@ -246,16 +249,7 @@ exports.forgotPassword = catchAsyncError(async (req, res, next) => {
 
   // get resetPassword OTP
   const otp = generateOTP();
-
-  let otpInstance = await otpModel.findOne({ where: { email, providerId: provider.id } });
-  if (!otpInstance) {
-    otpInstance = await otpModel.create({
-      email, providerId: provider.id, otp
-    })
-  } else {
-    otpInstance.otp = otp;
-    await otpInstance.save();
-  }
+  await storeOTP({ otp, email, providerId: provider.id });
 
   const message = `<b>Your password reset OTP is :- <h2>${otp}</h2></b><div>If you have not requested this email then, please ignore it.</div>`;
 
