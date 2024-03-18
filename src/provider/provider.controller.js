@@ -246,9 +246,16 @@ exports.forgotPassword = catchAsyncError(async (req, res, next) => {
 
   // get resetPassword OTP
   const otp = generateOTP();
-  await otpModel.create({
-    otp, email, providerId: provider.id,
-  });
+
+  let otpInstance = await otpModel.findOne({ where: { email, providerId: provider.id } });
+  if (!otpInstance) {
+    otpInstance = await otpModel.create({
+      email, providerId: provider.id, otp
+    })
+  } else {
+    otpInstance.otp = otp;
+    await otpInstance.save();
+  }
 
   const message = `<b>Your password reset OTP is :- <h2>${otp}</h2></b><div>If you have not requested this email then, please ignore it.</div>`;
 
