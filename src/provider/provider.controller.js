@@ -217,6 +217,7 @@ exports.getProfile = catchAsyncError(async (req, res, next) => {
 
   const provider = await providerModel.findByPk(userId, {
     attributes: [
+      "id",
       "fullname",
       "email",
       "mobile_no",

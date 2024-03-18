@@ -18,7 +18,7 @@ exports.auth = async (req, res, next) => {
       req.headers.authorization,
       process.env.JWT_SECRET
     );
-    console.log(tokenData);
+    console.log({ tokenData });
 
     if ("providerId" in tokenData) {
       req.userId = tokenData.providerId;

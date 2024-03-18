@@ -1,6 +1,6 @@
 var express = require("express");
 var router = express.Router();
-const { auth } = require("../../middlewares/auth");
+const { auth, onlyProvider } = require("../../middlewares/auth");
 
 const {
   register,
@@ -26,13 +26,13 @@ router.post("/register", uploadFiles, register);
 router.post("/verify-registerOtp", verifyRegisterOTP);
 router.post("/login", login);
 router.put("/resend-otp", resendOTP);
-router.get("/profile", auth, getProfile);
+router.get("/profile", auth, onlyProvider, getProfile);
 router.post("/forgot-password", forgotPassword);
 router.post("/verify-otp", verifyOTP);
-router.put("/update-password", auth, changePassword);
+router.put("/update-password", auth, onlyProvider, changePassword);
 router.put("/reset-password", changePassword);
-router.put("/profile", auth, upload.single("image"), updateProfile);
-router.put("/re-upload", auth, upload.single("pdf"), reUpload);
-router.delete("/delete", auth, deleteAccount);
+router.put("/profile", auth, onlyProvider, upload.single("image"), updateProfile);
+router.put("/re-upload", auth, onlyProvider, upload.single("pdf"), reUpload);
+router.delete("/delete", auth, onlyProvider, deleteAccount);
 
 module.exports = router;
