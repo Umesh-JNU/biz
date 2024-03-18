@@ -187,7 +187,8 @@ exports.resendOTP = catchAsyncError(async (req, res, next) => {
     return next(new ErrorHandler("Please register or Provider doesn't exist.", 400));
   }
 
-
+  const otp = generateOTP();
+  
   let otpInstance = await otpModel.findOne({ where: { email, providerId: provider.id } });
   if (!otpInstance) {
     otpInstance = await otpModel.create({
