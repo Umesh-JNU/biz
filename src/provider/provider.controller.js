@@ -38,63 +38,20 @@ const getMsg = (otp) => {
     </div>
   </body>
   </html>`;
-
 }
-
-const resendOTPUtil = async (req, res, next) => {
-  const { email } = req.body;
-  if (!email) {
-    return next(new ErrorHandler("Please provide a valid email.", 400));
-  }
-
-  const provider = await providerModel.findOne({ where: { email } });
-  if (!provider) {
-    return next(new ErrorHandler("Provider not found", 404));
-  }
-
-  // get resetPassword OTP
-  const otp = generateOTP();
-
-  let otpInstance = await otpModel.findOne({ where: { email, providerId: provider.id } });
-  if (!otpInstance) {
-    otpInstance = await otpModel.create({
-      email, providerId: provider.id, otp
-    })
-  } else {
-    otpInstance.otp = otp;
-    await otpInstance.save();
-  }
-
-  const message = `<b>Your password reset OTP is :- <h2>${otp}</h2></b><div>If you have not requested this email then, please ignore it.</div>`;
-
-  try {
-    await sendEmail({
-      email: provider.email,
-      subject: `Password Reset`,
-      message,
-    });
-
-    res.status(200).json({ success: true, message: `OTP sent to ${provider.email}` });
-  } catch (error) {
-    await otpModel.destroy({
-      where: { otp, providerId: provider.id },
-    });
-    return next(new ErrorHandler(error.message, 500));
-  }
-};
 
 exports.register = catchAsyncError(async (req, res, next) => {
   console.log("register provider", req.body);
   const { services, categories, email, password } = req.body;
   req.body.role = ROLE;
 
-  if (!services || services.length <= 0) {
-    return next(new ErrorHandler("Please select at least one service", 400));
-  }
+  // if (!services || services.length <= 0) {
+  //   return next(new ErrorHandler("Please select at least one service", 400));
+  // }
 
-  if (!categories || categories.length <= 0) {
-    return next(new ErrorHandler("Please select at least one category", 400));
-  }
+  // if (!categories || categories.length <= 0) {
+  //   return next(new ErrorHandler("Please select at least one category", 400));
+  // }
 
   const transaction = await db.transaction();
   try {
@@ -138,8 +95,8 @@ exports.register = catchAsyncError(async (req, res, next) => {
     // await provider.addCategories(categories, { transaction });
     // await provider.addServices(services, { transaction });
     // below two line automatically set the latest category / service 
-    await provider.setCategories(categories, { transaction });
-    await provider.setServices(services, { transaction });
+    // await provider.setCategories(categories, { transaction });
+    // await provider.setServices(services, { transaction });
 
     const otp = generateOTP();
     // console.log({ provider, otp })
@@ -230,7 +187,6 @@ exports.resendOTP = catchAsyncError(async (req, res, next) => {
     return next(new ErrorHandler("Please register or Provider doesn't exist.", 400));
   }
 
-  const otp = generateOTP();
 
   let otpInstance = await otpModel.findOne({ where: { email, providerId: provider.id } });
   if (!otpInstance) {
@@ -375,6 +331,37 @@ exports.updateProfile = catchAsyncError(async (req, res, next) => {
     await providerModel.update(req.body, { where: { id: userId } });
     res.status(200).json({ message: "Updated" });
   }
+});
+
+exports.reUpload = catchAsyncError(async (req, res, next) => {
+  console.log("reUpload", req.body);
+  const { userId } = req;
+  console.log(userId);
+
+  if (!req.body.mobile_no) {
+    return next(new ErrorHandler("Please enter your mobile number", 400));
+  }
+  if (!req.file) {
+    return next(new ErrorHandler("Please upload your document", 400));
+  }
+
+  const { mimetype } = req.file;
+  // console.log({ mimetype });
+  if (mimetype !== "application/pdf") {
+    return next(new ErrorHandler("Document must be a pdf", 400));
+  }
+
+  // console.log({ file: req.file });
+  const provider = await providerModel.findByPk(userId);
+  if (!provider) {
+    return next(new ErrorHandler("Provider do not exist", 404));
+  }
+
+  const result = await s3Uploadv2(req.file);
+  req.body.document = result.Location && result.Location;
+
+  await providerModel.update(req.body, { where: { id: userId } });
+  res.status(200).json({ message: "Updated" });
 });
 
 exports.deleteAccount = catchAsyncError(async (req, res, next) => {

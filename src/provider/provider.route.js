@@ -13,6 +13,7 @@ const {
   updateProfile,
   deleteAccount,
   resendOTP,
+  reUpload,
 } = require("./provider.controller");
 
 const { upload } = require("../../utils/s3");
@@ -30,7 +31,8 @@ router.post("/forgot-password", forgotPassword);
 router.post("/verify-otp", verifyOTP);
 router.put("/update-password", auth, changePassword);
 router.put("/reset-password", changePassword);
-router.put("/profile", upload.single("image"), auth, updateProfile);
+router.put("/profile", auth, upload.single("image"), updateProfile);
+router.put("/re-upload", auth, upload.single("pdf"), reUpload);
 router.delete("/delete", auth, deleteAccount);
 
 module.exports = router;
