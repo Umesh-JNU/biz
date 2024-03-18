@@ -41,6 +41,48 @@ const getMsg = (otp) => {
 
 }
 
+const resendOTPUtil = async (req, res, next) => {
+  const { email } = req.body;
+  if (!email) {
+    return next(new ErrorHandler("Please provide a valid email.", 400));
+  }
+
+  const provider = await providerModel.findOne({ where: { email } });
+  if (!provider) {
+    return next(new ErrorHandler("Provider not found", 404));
+  }
+
+  // get resetPassword OTP
+  const otp = generateOTP();
+
+  let otpInstance = await otpModel.findOne({ where: { email, providerId: provider.id } });
+  if (!otpInstance) {
+    otpInstance = await otpModel.create({
+      email, providerId: provider.id, otp
+    })
+  } else {
+    otpInstance.otp = otp;
+    await otpInstance.save();
+  }
+
+  const message = `<b>Your password reset OTP is :- <h2>${otp}</h2></b><div>If you have not requested this email then, please ignore it.</div>`;
+
+  try {
+    await sendEmail({
+      email: provider.email,
+      subject: `Password Reset`,
+      message,
+    });
+
+    res.status(200).json({ success: true, message: `OTP sent to ${provider.email}` });
+  } catch (error) {
+    await otpModel.destroy({
+      where: { otp, providerId: provider.id },
+    });
+    return next(new ErrorHandler(error.message, 500));
+  }
+};
+
 exports.register = catchAsyncError(async (req, res, next) => {
   console.log("register provider", req.body);
   const { services, categories, email, password } = req.body;
@@ -320,28 +362,29 @@ exports.updateProfile = catchAsyncError(async (req, res, next) => {
   console.log("Update provider", req.body);
   const { userId } = req;
   console.log(userId);
-  console.log(req.userId);
-  const provider_check = await providerModel.findByPk(userId);
-  let imageUrl;
-  req.file && (imageUrl = await s3Uploadv2(req.file));
-  if (!provider_check) {
-    return next(new ErrorHandler("Provider do not exist"));
+
+  const provider = await providerModel.findByPk(userId);
+  if (!provider) {
+    return next(new ErrorHandler("Provider do not exist", 404));
   } else {
-    imageUrl
-      ? await providerModel.update(
-        { ...req.body, profileImage: imageUrl.Location },
-        { where: { id: userId } }
-      )
-      : await providerModel.update({ ...req.body }, { where: { id: userId } });
+    if (req.file) {
+      const result = await s3Uploadv2(req.file);
+      req.body.profileImage = result.Location && result.Location;
+    }
+
+    await providerModel.update(req.body, { where: { id: userId } });
     res.status(200).json({ message: "Updated" });
   }
 });
 
 exports.deleteAccount = catchAsyncError(async (req, res, next) => {
-  await providerModel.destroy({ where: { id: req.params.providerId } });
+  const { userId } = req;
+  const { id } = req.params;
+
+  await providerModel.destroy({ where: { id: userId || id } });
   res
     .status(200)
-    .json({ success: true, message: "Provider destroyed successfully" });
+    .json({ success: true, message: "Provider deleted successfully" });
 });
 
 // For Admin

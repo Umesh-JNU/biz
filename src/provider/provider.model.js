@@ -134,6 +134,9 @@ const providerModel = db.define("Providers", {
     type: DataTypes.ENUM("Provider"),
     defaultValue: "Provider",
   },
+  facebook: { type: DataTypes.STRING },
+  instagram: { type: DataTypes.STRING },
+  website: { type: DataTypes.STRING }
 });
 
 providerModel.prototype.comparePassword = async function (enteredPassword) {

@@ -60,6 +60,6 @@ const insertQuery = async () => {
 
 };
 
-// (async () => { await insertQuery(); })();
+(async () => { await insertQuery(); })();
 
 module.exports = { userRoute, adminRoute, serviceRoute, providerRoute, categoryRoute, serviceRoute };

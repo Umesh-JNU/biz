@@ -37,6 +37,6 @@ router
   .get(auth, getProfile)
   .patch(auth, upload.single("image"), updateUserData);
 
-router.delete("/delete/:userId", auth, deleteAccount);
+router.delete("/delete", auth, deleteAccount);
 
 module.exports = router;

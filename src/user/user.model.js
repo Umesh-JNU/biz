@@ -84,6 +84,7 @@ const userModel = db.define("Users", {
       notEmpty: { msg: "Mobile No. is required" }
     },
   },
+  
 });
 
 const userLog = db.define(

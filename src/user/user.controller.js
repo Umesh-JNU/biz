@@ -365,10 +365,13 @@ exports.getAlluser = catchAsyncError(async (req, res, next) => {
 });
 
 exports.deleteAccount = catchAsyncError(async (req, res, next) => {
-  await userModel.destroy({ where: { id: req.params.userId } });
+  const { userId } = req;
+  const { id } = req.params;
+
+  await userModel.destroy({ where: { id: userId || id } });
   res
     .status(200)
-    .json({ success: true, message: "User destroyed successfully" });
+    .json({ success: true, message: "User deleted successfully" });
 });
 
 // For Admin

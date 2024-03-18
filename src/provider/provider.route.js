@@ -31,5 +31,6 @@ router.post("/verify-otp", verifyOTP);
 router.put("/update-password", auth, changePassword);
 router.put("/reset-password", changePassword);
 router.put("/profile", upload.single("image"), auth, updateProfile);
-router.delete("/delete/:providerId", auth, deleteAccount);
+router.delete("/delete", auth, deleteAccount);
+
 module.exports = router;
