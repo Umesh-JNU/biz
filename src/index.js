@@ -23,12 +23,12 @@ serviceModel.belongsToMany(providerModel, { through: "ProviderService", foreignK
 // service has many providerService and providerService exactly belongs to one service
 // ONE-TO-MANY
 serviceModel.hasMany(proServiceModel, { foreignKey: "serviceId", as: "proServices" });
-proServiceModel.belongsTo(serviceModel, { foreignKey: "serviceId", as: "serviceTitle" });
+proServiceModel.belongsTo(serviceModel, { foreignKey: { name: "serviceId", allowNull: false }, as: "serviceTitle" });
 
 // provider has many providerService and providerService exactly belongs to one provider
 // ONE-TO-MANY
 providerModel.hasMany(proServiceModel, { foreignKey: "providerId", as: "ownService" });
-proServiceModel.belongsTo(providerModel, { foreignKey: "providerId", as: "provider" });
+proServiceModel.belongsTo(providerModel, { foreignKey: { name: "providerId", allowNull: false }, as: "provider" });
 
 providerModel.hasMany(availabilityModel, { foreignKey: "providerId", as: "time" });
 availabilityModel.belongsTo(providerModel, { foreignKey: "providerId", as: "provider" });

@@ -16,7 +16,11 @@ const {
   reUpload,
   updateAvailability,
   getAvailability,
-  disableAvailability
+  disableAvailability,
+  createProService,
+  getProServices,
+  updateProService,
+  deleteProService
 } = require("./provider.controller");
 
 const { upload } = require("../../utils/s3");
@@ -38,8 +42,17 @@ router.put("/profile", auth, onlyProvider, upload.single("image"), updateProfile
 router.put("/re-upload", auth, onlyProvider, upload.single("pdf"), reUpload);
 router.delete("/delete", auth, onlyProvider, deleteAccount);
 
+// timing api
 router.put("/update-avail", auth, onlyProvider, updateAvailability);
 router.get("/timing", auth, onlyProvider, getAvailability);
 router.put("/disable-avail", auth, onlyProvider, disableAvailability);
+
+// services api
+router.route("/service")
+  .post(auth, onlyProvider, createProService)
+  .get(auth, onlyProvider, getProServices);
+router.route("/service/:id")
+  .put(auth, onlyProvider, updateProService)
+  .delete(auth, onlyProvider, deleteProService);
 
 module.exports = router;

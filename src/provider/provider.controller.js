@@ -440,6 +440,56 @@ exports.disableAvailability = catchAsyncError(async (req, res, next) => {
   res.status(200).json({ message: "Availability disabled successfully" });
 });
 
+exports.createProService = catchAsyncError(async (req, res, next) => {
+  console.log("createProService", req.body);
+  const userId = req.userId;
+
+  const provider = await providerModel.findByPk(userId);
+  if (!provider) {
+    return next(new ErrorHandler("Provider not found", 404));
+  }
+
+  await provider.createOwnService(req.body);
+  res.status(201).json({ message: "Service create successfully" });
+});
+
+exports.getProServices = catchAsyncError(async (req, res, next) => {
+  console.log("getProServices", req.body);
+  const userId = req.userId;
+
+  const provider = await providerModel.findByPk(userId);
+  if (!provider) {
+    return next(new ErrorHandler("Provider not found", 404));
+  }
+
+  const services = await provider.getOwnService({ attributes: ["id", "desc", "charge", "serviceId"] });
+  res.status(200).json({ services });
+});
+
+exports.updateProService = catchAsyncError(async (req, res, next) => {
+  console.log("updateProServices", req.body);
+  const { id } = req.params;
+
+  const [isUpdated, result] = await proServiceModel.update(req.body, { where: { id }, returning: true });
+
+  if (isUpdated === 0) {
+    return next(new ErrorHandler("Something went wrong", 500));
+  }
+  res.status(200).json({ success: isUpdated === 1, message: "Service updated successfully" });
+});
+
+exports.deleteProService = catchAsyncError(async (req, res, next) => {
+  console.log("deleteProService", req.params);
+  const { id } = req.params;
+
+  const result = await proServiceModel.destroy({ where: { id } });
+  if (!result) {
+    return next(new ErrorHandler("Service not found", 404));
+  }
+
+  res.status(200).json({ success: true, message: "Service deleted successfully" });
+});
+
 // For Admin
 exports.verifyProvider = catchAsyncError(async (req, res, next) => { });
 exports.getAllProvider = catchAsyncError(async (req, res, next) => { });
