@@ -1,4 +1,4 @@
 const providerRoute = require("./provider.route");
-const { providerModel, proServiceModel } = require("./provider.model");
+const { providerModel, proServiceModel, availabilityModel } = require("./provider.model");
 
-module.exports = { providerRoute, providerModel, proServiceModel };
+module.exports = { providerRoute, providerModel, proServiceModel, availabilityModel };

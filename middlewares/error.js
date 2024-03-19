@@ -1,5 +1,6 @@
 const multer = require("multer");
 const ErrorHandler = require("../utils/errorHandler");
+const e = require("express");
 
 module.exports = (err, req, res, next) => {
 	console.log({ err });
@@ -43,14 +44,20 @@ module.exports = (err, req, res, next) => {
 	// sequelize duplicate key error
 	if (err.name === "SequelizeUniqueConstraintError") {
 		const { path } = err.errors[0];
+		console.log({ path })
 		switch (path) {
 			case "categoryName":
 				err = new ErrorHandler("Category already exists. Category name must be unique.", 400);
 				break;
-
+			case "providerId": 
+				err = new ErrorHandler("Category")
 			default:
 				break;
 		}
+	}
+
+	if (err.name === "AggregateError") {
+		err = new ErrorHandler(err.errors[0].message.split("\n")[0], 400);
 	}
 
 	// wrong jwt error

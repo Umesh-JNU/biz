@@ -4,6 +4,7 @@ const errorMiddleware = require("./middlewares/error");
 const dotenv = require("dotenv");
 const app = express();
 
+// const path = "./config/local.env";
 const path = "./config/config.env";
 dotenv.config({ path });
 
@@ -17,15 +18,16 @@ app.use(
   })
 );
 
-const { userRoute, providerRoute, categoryRoute, serviceRoute, adminRoute } = require('./src');
+const { userRoute, providerRoute, categoryRoute, serviceRoute, adminRoute, albumRoute } = require('./src');
 
 app.get("/", (req, res, next) => res.json({ message: "Server is running" }));
 
 app.use("/api/users", userRoute);
 app.use("/api/admin", adminRoute);
-app.use("/api/providers", providerRoute);
-app.use("/api/category", categoryRoute);
+app.use("/api/album", albumRoute);
 app.use("/api/service", serviceRoute);
+app.use("/api/category", categoryRoute);
+app.use("/api/providers", providerRoute);
 
 app.all("*", async (req, res) => {
   res.status(404).json({

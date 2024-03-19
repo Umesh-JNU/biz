@@ -1,7 +1,8 @@
 const adminRoute = require('./admin/admin.route');
 const { userRoute, userModel, otpModel } = require('./user');
-const { categoryModel, serviceModel, categoryRoute, serviceRoute } = require('./services');
-const { providerRoute, providerModel, proServiceModel } = require('./provider');
+const { categoryRoute, serviceRoute, categoryModel, serviceModel } = require('./services');
+const { providerRoute, providerModel, proServiceModel, availabilityModel } = require('./provider');
+const { albumRoute, videoModel, postModel } = require('./posts');
 
 
 // One Category has many service and one service belongs to exactly on category
@@ -29,6 +30,14 @@ proServiceModel.belongsTo(serviceModel, { foreignKey: "serviceId", as: "serviceT
 providerModel.hasMany(proServiceModel, { foreignKey: "providerId", as: "ownService" });
 proServiceModel.belongsTo(providerModel, { foreignKey: "providerId", as: "provider" });
 
+providerModel.hasMany(availabilityModel, { foreignKey: "providerId", as: "time" });
+availabilityModel.belongsTo(providerModel, { foreignKey: "providerId", as: "provider" });
+
+providerModel.hasMany(postModel, { foreignKey: "providerId", as: "posts" });
+postModel.belongsTo(providerModel, { foreignKey: "providerId", as: "provider" });
+
+providerModel.hasOne(videoModel, { foreignKey: { name: "providerId", unique: true }, as: "video" });
+videoModel.belongsTo(providerModel, { foreignKey: "providerId", as: "provider" });
 
 providerModel.hasOne(otpModel, { foreignKey: "providerId", as: "otp" });
 otpModel.belongsTo(providerModel, { foreignKey: "providerId", as: "provider" });
@@ -50,6 +59,22 @@ const insertQuery = async () => {
     mobile_no: "7667826351"
   });
 
+  const provider = await providerModel.create({
+    email: "umesh.quantumitinnovation@gmail.com",
+    password: "password",
+    fullname: "Umesh Kumar",
+    gender: 'M',
+    isVerified: true,
+    country_code: "IN",
+    role: "Provider",
+    profileImage: "https://jeff-truck.s3.amazonaws.com/biz/1710496638163-user-logo.jpg",
+    document: "https://jeff-truck.s3.amazonaws.com/biz/1710496638163-user-logo.jpg",
+    buisness_name: "businame",
+    buisness_location: "adf",
+    id_no: 1234567890,
+    mobile_no: "7667826351"
+  });
+  console.log({ provider })
   // create category and service
   const categories = ["Carpenter Works", "Contructions", "Auto Mobile", "Saloon", "Live Stocks", "Plumbing"];
   for (let categoryName of categories) {
@@ -62,4 +87,4 @@ const insertQuery = async () => {
 
 // (async () => { await insertQuery(); })();
 
-module.exports = { userRoute, adminRoute, serviceRoute, providerRoute, categoryRoute, serviceRoute };
+module.exports = { userRoute, adminRoute, serviceRoute, providerRoute, categoryRoute, serviceRoute, albumRoute };

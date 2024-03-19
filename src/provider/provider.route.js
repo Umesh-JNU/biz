@@ -14,6 +14,7 @@ const {
   deleteAccount,
   resendOTP,
   reUpload,
+  updateAvailability
 } = require("./provider.controller");
 
 const { upload } = require("../../utils/s3");
@@ -34,5 +35,7 @@ router.put("/reset-password", changePassword);
 router.put("/profile", auth, onlyProvider, upload.single("image"), updateProfile);
 router.put("/re-upload", auth, onlyProvider, upload.single("pdf"), reUpload);
 router.delete("/delete", auth, onlyProvider, deleteAccount);
+
+router.put("/update-avail", auth, onlyProvider, updateAvailability);
 
 module.exports = router;

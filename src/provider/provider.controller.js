@@ -2,7 +2,7 @@ const ErrorHandler = require("../../utils/errorHandler");
 const catchAsyncError = require("../../utils/catchAsyncError");
 const bcrypt = require("bcryptjs");
 const { otpModel } = require("../user/user.model");
-const { providerModel, proServiceModel } = require("./provider.model");
+const { providerModel, proServiceModel, availabilityModel } = require("./provider.model");
 
 const { s3UploadMulti, s3Uploadv2 } = require("../../utils/s3");
 const sendEmail = require("../../utils/sendEmail");
@@ -370,6 +370,40 @@ exports.deleteAccount = catchAsyncError(async (req, res, next) => {
     .json({ success: true, message: "Provider deleted successfully" });
 });
 
+exports.updateAvailability = catchAsyncError(async (req, res, next) => {
+  console.log("updateAvailability", req.body);
+  const providerId = req.userId;
+
+  const { timing, avail_type } = req.body;
+  if (!avail_type) {
+    return next(new ErrorHandler("Please select availability type", 400));
+  }
+
+  if (!timing || timing.length === 0) {
+    return next(new ErrorHandler("Please select timing for weekdays", 400));
+  }
+
+  console.log(typeof timing)
+  if (typeof timing !== "object") {
+    return next(new ErrorHandler("Timing must be array type", 400));
+  }
+
+  const provider = await providerModel.findByPk(providerId);
+  if (!provider) {
+    return next(new ErrorHandler("Provider not found", 404));
+  }
+
+  timing.forEach(time => {
+    time.providerId = providerId
+  });
+  await availabilityModel.bulkCreate(timing, { validate: true });
+
+  provider.is_avail = true;
+  provider.avail_type = avail_type;
+  await provider.save();
+
+  res.status(200).json({ message: "Timing updated successfully" });
+});
 // For Admin
 exports.verifyProvider = catchAsyncError(async (req, res, next) => { });
 exports.getAllProvider = catchAsyncError(async (req, res, next) => { });

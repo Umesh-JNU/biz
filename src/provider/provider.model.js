@@ -30,6 +30,46 @@ const proServiceModel = db.define("ProService", {
   }
 });
 
+const availabilityModel = db.define("WeekDayAvailability", {
+  providerId: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+  },
+  weekday: {
+    type: DataTypes.ENUM('0', '1', '2', '3', '4', '5', '6'),
+    allowNull: false
+  },
+  from: {
+    type: DataTypes.TIME,
+    // defaultValue: '00:00:00'
+  },
+  to: {
+    type: DataTypes.TIME,
+    // defaultValue: '00:00:00'
+  },
+  is_open: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false,
+  }
+}, {
+  indexes: [{
+    unique: true,
+    fields: ['providerId', 'weekday'],
+  }],
+  validate: {
+    validateFromIfOpen() {
+      if (this.is_open && !this.from) {
+        throw new Error('From time is required when is_open is true');
+      }
+    },
+    validateToIfOpen() {
+      if (this.is_open && !this.to) {
+        throw new Error('To time is required when is_open is true');
+      }
+    }
+  }
+});
+
 const providerModel = db.define("Providers", {
   email: {
     type: DataTypes.STRING,
@@ -140,7 +180,14 @@ const providerModel = db.define("Providers", {
   },
   facebook: { type: DataTypes.STRING },
   instagram: { type: DataTypes.STRING },
-  website: { type: DataTypes.STRING }
+  website: { type: DataTypes.STRING },
+  is_avail: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false
+  },
+  avail_type: {
+    type: DataTypes.ENUM("ALL_DAY", "CUSTOM_DAY")
+  }
 });
 
 providerModel.prototype.comparePassword = async function (enteredPassword) {
@@ -162,4 +209,4 @@ providerModel.prototype.getJWTToken = function () {
   //   });
 };
 
-module.exports = { providerModel, proServiceModel };
+module.exports = { providerModel, proServiceModel, availabilityModel };

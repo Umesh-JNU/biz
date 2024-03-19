@@ -57,10 +57,10 @@ exports.onlyProvider = async (req, res, next) => {
     const { userId } = req;
     const provider = await providerModel.findByPk(userId);
     console.log(provider);
-    console.log(provider.role);
     if (!provider)
       return next(new ErrorHandler("Invalid token. Provider not found.", 404));
 
+    console.log(provider.role);
     if (provider.role !== "Provider") {
       return next(new ErrorHandler("Restricted.", 401));
     }

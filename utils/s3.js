@@ -28,9 +28,8 @@ exports.s3UploadMulti = async (files) => {
   const params = files.map((file) => {
     return {
       Bucket: process.env.AWS_BUCKET_NAME,
-      Key: `biz/${Date.now().toString()}-${
-        file.originalname ? file.originalname : "not"
-      }`,
+      Key: `biz/${Date.now().toString()}-${file.originalname ? file.originalname : "not"
+        }`,
       Body: file.buffer,
       ContentType: file.mimetype,
     };
@@ -42,17 +41,22 @@ exports.s3UploadMulti = async (files) => {
 const storage = multer.memoryStorage();
 
 const fileFilter = (req, file, cb) => {
-  if (
-    file.mimetype.split("/")[0] === "image" ||
-    file.mimetype.split("/")[1] === "pdf"
-  ) {
-    req.video_file = false;
-    cb(null, true);
-    //   } else if (file.mimetype.split("/")[0] === "video") {
-    //     req.video_file = true;
-    //     cb(null, true);
-  } else {
-    cb(new multer.MulterError("LIMIT_UNEXPECTED_FILE"), false);
+  const mimetype = file.mimetype.split("/")[0];
+  console.log({ mimetype });
+  switch (mimetype) {
+    case "image":
+    case "application":
+      req.video_file = false;
+      cb(null, true);
+      break;
+
+    case "video":
+      req.video_file = true;
+      cb(null, true);
+      break;
+
+    default:
+      cb(new multer.MulterError("LIMIT_UNEXPECTED_FILE"), false);
   }
 };
 
