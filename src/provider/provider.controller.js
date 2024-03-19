@@ -59,13 +59,13 @@ exports.register = catchAsyncError(async (req, res, next) => {
   const { services, categories, email, password } = req.body;
   req.body.role = ROLE;
 
-  // if (!services || services.length <= 0) {
-  //   return next(new ErrorHandler("Please select at least one service", 400));
-  // }
+  if (!services || services.length <= 0) {
+    return next(new ErrorHandler("Please select at least one service", 400));
+  }
 
-  // if (!categories || categories.length <= 0) {
-  //   return next(new ErrorHandler("Please select at least one category", 400));
-  // }
+  if (!categories || categories.length <= 0) {
+    return next(new ErrorHandler("Please select at least one category", 400));
+  }
 
   const transaction = await db.transaction();
   try {
@@ -109,8 +109,8 @@ exports.register = catchAsyncError(async (req, res, next) => {
     // await provider.addCategories(categories, { transaction });
     // await provider.addServices(services, { transaction });
     // below two line automatically set the latest category / service 
-    // await provider.setCategories(categories, { transaction });
-    // await provider.setServices(services, { transaction });
+    await provider.setCategories(categories, { transaction });
+    await provider.setServices(services, { transaction });
 
     const otp = generateOTP();
     await storeOTP({ otp, email, providerId: provider.id }, transaction);
