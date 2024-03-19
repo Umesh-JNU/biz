@@ -32,7 +32,7 @@ const proServiceModel = db.define("ProService", {
 
 const availabilityModel = db.define("WeekDayAvailability", {
   providerId: {
-    type: DataTypes.INTEGER,
+    type: DataTypes.UUID,
     allowNull: false,
   },
   weekday: {
@@ -71,6 +71,12 @@ const availabilityModel = db.define("WeekDayAvailability", {
 });
 
 const providerModel = db.define("Providers", {
+  id: {
+    type: DataTypes.UUID,
+    defaultValue: DataTypes.UUIDV1,
+    primaryKey: true,
+    allowNull: false
+  },
   email: {
     type: DataTypes.STRING,
     allowNull: false,

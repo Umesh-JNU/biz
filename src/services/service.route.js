@@ -1,6 +1,6 @@
-var express = require("express");
-var categoryRoute = express.Router();
-var serviceRoute = express.Router();
+const express = require("express");
+const categoryRoute = express.Router();
+const serviceRoute = express.Router();
 
 const { auth } = require("../../middlewares/auth");
 

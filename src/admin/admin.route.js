@@ -1,5 +1,5 @@
-var express = require("express");
-var router = express.Router();
+const express = require("express");
+const router = express.Router();
 const { auth, onlyAdmin } = require("../../middlewares/auth");
 
 // ----------------------------   ADMIN  ----------------------------
@@ -43,5 +43,10 @@ router.route("/category/:id")
   .get(auth, onlyAdmin, getCategory)
   .put(auth, onlyAdmin, updateCategory)
   .delete(auth, onlyAdmin, deleteCategory);
+
+// ----------------------------  CONTENT ----------------------------
+const { createUpdateContent } = require("../contents/content.controller");
+
+router.post("/content", auth, onlyAdmin, createUpdateContent);
 
 module.exports = router;

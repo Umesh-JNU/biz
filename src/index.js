@@ -3,7 +3,7 @@ const { userRoute, userModel, otpModel } = require('./user');
 const { categoryRoute, serviceRoute, categoryModel, serviceModel } = require('./services');
 const { providerRoute, providerModel, proServiceModel, availabilityModel } = require('./provider');
 const { albumRoute, videoModel, postModel } = require('./posts');
-
+const { contentRoute } = require("./contents");
 
 // One Category has many service and one service belongs to exactly on category
 // ONE-TO-MANY
@@ -87,4 +87,4 @@ const insertQuery = async () => {
 
 // (async () => { await insertQuery(); })();
 
-module.exports = { userRoute, adminRoute, serviceRoute, providerRoute, categoryRoute, serviceRoute, albumRoute };
+module.exports = { userRoute, adminRoute, serviceRoute, providerRoute, categoryRoute, serviceRoute, albumRoute, contentRoute };

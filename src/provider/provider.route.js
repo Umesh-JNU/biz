@@ -1,5 +1,5 @@
-var express = require("express");
-var router = express.Router();
+const express = require("express");
+const router = express.Router();
 const { auth, onlyProvider } = require("../../middlewares/auth");
 
 const {
@@ -14,7 +14,9 @@ const {
   deleteAccount,
   resendOTP,
   reUpload,
-  updateAvailability
+  updateAvailability,
+  getAvailability,
+  disableAvailability
 } = require("./provider.controller");
 
 const { upload } = require("../../utils/s3");
@@ -37,5 +39,7 @@ router.put("/re-upload", auth, onlyProvider, upload.single("pdf"), reUpload);
 router.delete("/delete", auth, onlyProvider, deleteAccount);
 
 router.put("/update-avail", auth, onlyProvider, updateAvailability);
+router.get("/timing", auth, onlyProvider, getAvailability);
+router.put("/disable-avail", auth, onlyProvider, disableAvailability);
 
 module.exports = router;

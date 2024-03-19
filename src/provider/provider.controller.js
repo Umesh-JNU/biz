@@ -396,6 +396,7 @@ exports.updateAvailability = catchAsyncError(async (req, res, next) => {
   timing.forEach(time => {
     time.providerId = providerId
   });
+  await availabilityModel.destroy({ where: { providerId: provider.id } });
   await availabilityModel.bulkCreate(timing, { validate: true });
 
   provider.is_avail = true;
@@ -404,6 +405,41 @@ exports.updateAvailability = catchAsyncError(async (req, res, next) => {
 
   res.status(200).json({ message: "Timing updated successfully" });
 });
+
+exports.getAvailability = catchAsyncError(async (req, res, next) => {
+  console.log("getAvailabiltiy");
+  const userId = req.userId;
+  const provider = await providerModel.findByPk(userId);
+  if (!provider) {
+    return next(new ErrorHandler("Provider not found", 404));
+  }
+
+  const timing = await availabilityModel.findAll({
+    where: { providerId: provider.id },
+    attributes: ["weekday", "from", "to", "is_open"]
+  });
+
+  res.status(200).json({
+    avail_type: provider.avail_type,
+    is_avail: provider.is_avail,
+    timing
+  });
+});
+
+exports.disableAvailability = catchAsyncError(async (req, res, next) => {
+  console.log("disableAvailability");
+  const userId = req.userId;
+  const provider = await providerModel.findByPk(userId);
+  if (!provider) {
+    return next(new ErrorHandler("Provider not found", 404));
+  }
+
+  provider.is_avail = false;
+  await provider.save();
+
+  res.status(200).json({ message: "Availability disabled successfully" });
+});
+
 // For Admin
 exports.verifyProvider = catchAsyncError(async (req, res, next) => { });
 exports.getAllProvider = catchAsyncError(async (req, res, next) => { });

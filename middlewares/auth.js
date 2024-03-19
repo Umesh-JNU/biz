@@ -36,12 +36,16 @@ exports.auth = async (req, res, next) => {
 exports.onlyAdmin = async (req, res, next) => {
   try {
     const { userId } = req;
+    if(typeof userId !== 'number') {
+      return next(new ErrorHandler("Invalid Id", 401));
+    }
+    
     const user = await userModel.findByPk(userId);
     console.log(user);
-    console.log(user.role);
     if (!user)
       return next(new ErrorHandler("Invalid token. User not found.", 404));
 
+    console.log(user.role);
     if (user.role !== "Admin") {
       return next(new ErrorHandler("Restricted.", 401));
     }
