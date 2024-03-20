@@ -8,6 +8,8 @@ const { s3UploadMulti, s3Uploadv2 } = require("../../utils/s3");
 const sendEmail = require("../../utils/sendEmail");
 const generateOTP = require("../../utils/otpGenerator");
 const { db } = require("../../config/database");
+const { categoryModel, serviceModel } = require("../services");
+const { QueryTypes } = require("sequelize");
 
 const ROLE = "Provider";
 const getMsg = (otp) => {
@@ -403,7 +405,7 @@ exports.updateAvailability = catchAsyncError(async (req, res, next) => {
   provider.avail_type = avail_type;
   await provider.save();
 
-  res.status(200).json({ message: "Timing updated successfully" });
+  res.status(200).json({ success: true, message: "Timing updated successfully" });
 });
 
 exports.getAvailability = catchAsyncError(async (req, res, next) => {
@@ -437,9 +439,58 @@ exports.disableAvailability = catchAsyncError(async (req, res, next) => {
   provider.is_avail = false;
   await provider.save();
 
-  res.status(200).json({ message: "Availability disabled successfully" });
+  res.status(200).json({ success: true, message: "Availability disabled successfully" });
 });
 
+exports.getSelectedCategory = catchAsyncError(async (req, res, next) => {
+  console.log("getSelectedCategory", req.userId);
+  const provider = await providerModel.findByPk(req.userId);
+  if (!provider) {
+    return next(new ErrorHandler("Provider not found", 404));
+  }
+
+  const myCategory = await provider.getCategories({
+    attributes: ["id", "categoryName"],
+    joinTableAttributes: []
+  });
+  res.status(200).json({ myCategory });
+});
+
+exports.updateMyCategory = catchAsyncError(async (req, res, next) => {
+  console.log("updateMyCategory", req.userId, req.body);
+  const provider = await providerModel.findByPk(req.userId);
+  if (!provider) {
+    return next(new ErrorHandler("Provider not found", 404));
+  }
+
+  const { deleteCategory, addCategory } = req.body;
+  if (addCategory && (typeof addCategory === 'object') && addCategory.length > 0) {
+    await provider.addCategories(addCategory);
+  }
+
+  if (deleteCategory && (typeof deleteCategory === 'object') && deleteCategory.length > 0) {
+    // fetch all services whose category matches
+    var services = await serviceModel.findAll({
+      where: { categoryId: deleteCategory }
+    });
+
+    // deleting services of provider
+    for (let ser of services) {
+      // deleting service created by provider
+      await proServiceModel.destroy({ where: { serviceId: ser.id, providerId: provider.id } });
+
+      // deleting service selected at the time of register
+      await provider.removeService(ser.id);
+    }
+
+    // deleting category
+    await provider.removeCategories(deleteCategory);
+  }
+
+  res.status(200).json({ success: true, messagae: "Category updated successfully" });
+});
+
+//  Providers service 
 exports.createProService = catchAsyncError(async (req, res, next) => {
   console.log("createProService", req.body);
   const userId = req.userId;

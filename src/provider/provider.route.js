@@ -20,7 +20,9 @@ const {
   createProService,
   getProServices,
   updateProService,
-  deleteProService
+  deleteProService,
+  getSelectedCategory,
+  updateMyCategory
 } = require("./provider.controller");
 
 const { upload } = require("../../utils/s3");
@@ -54,5 +56,10 @@ router.route("/service")
 router.route("/service/:id")
   .put(auth, onlyProvider, updateProService)
   .delete(auth, onlyProvider, deleteProService);
+
+// category
+router.route("/category")
+  .get(auth, onlyProvider, getSelectedCategory)
+  .put(auth, onlyProvider, updateMyCategory);
 
 module.exports = router;
