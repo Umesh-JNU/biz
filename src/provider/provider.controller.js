@@ -8,8 +8,7 @@ const { s3UploadMulti, s3Uploadv2 } = require("../../utils/s3");
 const sendEmail = require("../../utils/sendEmail");
 const generateOTP = require("../../utils/otpGenerator");
 const { db } = require("../../config/database");
-const { categoryModel, serviceModel } = require("../services");
-const { QueryTypes } = require("sequelize");
+const { serviceModel } = require("../services");
 
 const ROLE = "Provider";
 const getMsg = (otp) => {
@@ -232,6 +231,7 @@ exports.getProfile = catchAsyncError(async (req, res, next) => {
       "facebook",
       "instagram",
       "website",
+      "onHold",
     ],
   });
   res.status(200).json({ success: true, provider });
@@ -336,8 +336,9 @@ exports.reUpload = catchAsyncError(async (req, res, next) => {
   const { userId } = req;
   console.log(userId);
 
-  if (!req.body.mobile_no) {
-    return next(new ErrorHandler("Please enter your mobile number", 400));
+  const {mobile_no, country_code} = req.body;
+  if (!mobile_no || !country_code) {
+    return next(new ErrorHandler("Required mobile number and country code", 400));
   }
   if (!req.file) {
     return next(new ErrorHandler("Please upload your document", 400));
@@ -541,6 +542,18 @@ exports.deleteProService = catchAsyncError(async (req, res, next) => {
   res.status(200).json({ success: true, message: "Service deleted successfully" });
 });
 
+// enquiry
+exports.getEnquiry = catchAsyncError(async (req, res, next) => {
+  console.log("getEnquiry", req.query);
+  let { date } = req.query;
+  if (!date) {
+    date = new Date().toDateString();
+  }
+
+  console.log({ date });
+  const count = 0;
+  res.status(200).json({ count });
+});
 // For Admin
 exports.verifyProvider = catchAsyncError(async (req, res, next) => { });
 exports.getAllProvider = catchAsyncError(async (req, res, next) => { });

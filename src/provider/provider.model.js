@@ -152,7 +152,7 @@ const providerModel = db.define("Providers", {
   },
   onHold: {
     type: DataTypes.BOOLEAN,
-    defaultValue: false
+    defaultValue: true
   },
   mobile_no: {
     type: DataTypes.STRING,

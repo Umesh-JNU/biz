@@ -22,7 +22,8 @@ const {
   updateProService,
   deleteProService,
   getSelectedCategory,
-  updateMyCategory
+  updateMyCategory,
+  getEnquiry
 } = require("./provider.controller");
 
 const { upload } = require("../../utils/s3");
@@ -61,5 +62,8 @@ router.route("/service/:id")
 router.route("/category")
   .get(auth, onlyProvider, getSelectedCategory)
   .put(auth, onlyProvider, updateMyCategory);
+
+// enquiry
+router.get("/enquiry", auth, onlyProvider, getEnquiry);
 
 module.exports = router;
