@@ -3,7 +3,8 @@ const ErrorHandler = require("../utils/errorHandler");
 const e = require("express");
 
 module.exports = (err, req, res, next) => {
-	console.log({ err });
+	console.log({ err })
+	// console.log({ keys: Object.keys(err?.parent) });
 	err.message = err.message || "Internal Server Error";
 
 	if (err instanceof multer.MulterError) {
@@ -49,7 +50,7 @@ module.exports = (err, req, res, next) => {
 			case "categoryName":
 				err = new ErrorHandler("Category already exists. Category name must be unique.", 400);
 				break;
-			case "providerId": 
+			case "providerId":
 				err = new ErrorHandler("Category")
 			default:
 				break;
@@ -58,6 +59,10 @@ module.exports = (err, req, res, next) => {
 
 	if (err.name === "AggregateError") {
 		err = new ErrorHandler(err.errors[0].message.split("\n")[0], 400);
+	}
+
+	if (err?.parent?.code === '22P02') {
+		err = new ErrorHandler("Invalid Id", 400);
 	}
 
 	// wrong jwt error

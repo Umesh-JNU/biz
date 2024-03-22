@@ -10,6 +10,7 @@ const {
 const { s3Uploadv2 } = require("../../utils/s3");
 const sendEmail = require("../../utils/sendEmail");
 const generateOTP = require("../../utils/otpGenerator");
+const { serviceModel } = require("../services");
 
 const ROLE = "User";
 const getMsg = (otp) => {
@@ -191,13 +192,6 @@ exports.resendOTP = catchAsyncError(async (req, res, next) => {
   }
 });
 
-exports.BookService = catchAsyncError(async (req, res, next) => {
-  const userlog = await userLog.create({
-    ...req.body,
-  });
-  res.status(200).json({ userlog });
-});
-
 exports.forgotPassword = catchAsyncError(async (req, res, next) => {
   console.log("forgot password", req.body);
   const { email } = req.body;
@@ -363,6 +357,41 @@ exports.deleteAccount = catchAsyncError(async (req, res, next) => {
   res
     .status(200)
     .json({ success: true, message: "User deleted successfully" });
+});
+
+// enquiry
+exports.createEnquiry = catchAsyncError(async (req, res, next) => {
+  console.log("createEnquiry", req.userId, req.body);
+  const { providerId } = req.body;
+  if (!providerId) {
+    return next(new ErrorHandler("Please send a provider ID", 400));
+  }
+
+  const user = await userModel.findByPk(req.userId);
+  if (!user) {
+    return next(new ErrorHandler("User not found", 404));
+  }
+
+  await user.addEnquiry(providerId);
+  res.status(201).json({ message: "Enquiry created successfully" });
+});
+
+exports.getAllEnquiry = catchAsyncError(async (req, res, next) => {
+  console.log("getAllEnquiry", req.userId);
+
+  const user = await userModel.findByPk(req.userId);
+  if (!user) {
+    return next(new ErrorHandler("User not found", 404));
+  }
+
+  const enquiry = await user.getEnquiry({
+    attributes: ["id", "fullname"],
+    include: [{
+      model: serviceModel,
+      as: "services"
+    }]
+  });
+  res.status(200).json({ enquiry });
 });
 
 // For Admin

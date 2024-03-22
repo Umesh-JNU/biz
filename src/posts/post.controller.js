@@ -10,6 +10,9 @@ exports.createIntroVideo = catchAsyncError(async (req, res, next) => {
   if (!file) {
     return next(new ErrorHandler("Please upload file", 400));
   }
+  if (file.mimetype.split("/")[0] !== "video") {
+    return next(new ErrorHandler("File must be a video", 400));
+  }
 
   const provider = await providerModel.findByPk(req.userId);
   if (!provider) {

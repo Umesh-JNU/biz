@@ -13,6 +13,14 @@ const serviceModel = db.define("Service", {
       },
     }
   },
+  image: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    validate: {
+      notEmpty: { msg: "Image is required" },
+      notNull: { msg: "Image is required" },
+    },
+  }
 }, { timestamps: true });
 
 const categoryModel = db.define("Category", {
