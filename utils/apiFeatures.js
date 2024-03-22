@@ -10,7 +10,10 @@ module.exports = (key, requestQuery) => {
   }
   const { keyword, resultPerPage, currentPage } = requestQuery;
   console.log(keyword, resultPerPage, currentPage);
-  let query = { where: {} };
+  let query = {
+    where: {},
+    order: [['createdAt', 'DESC']]
+  };
   if (keyword) {
     query.where = {
       ...query.where,

@@ -4,11 +4,11 @@ const serviceRoute = express.Router();
 
 const { auth } = require("../../middlewares/auth");
 
-const { getAllService, getAllCategory, getService } = require("./service.controller");
+const { getServicesWithCategory, getService, getCategoryWithService } = require("./service.controller");
 
-categoryRoute.get("/", getAllCategory);
+categoryRoute.get("/", getCategoryWithService);
 
-serviceRoute.get("/", getAllService);
+serviceRoute.get("/", getServicesWithCategory);
 serviceRoute.get("/:id", auth, getService);
 
 module.exports = { categoryRoute, serviceRoute };

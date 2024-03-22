@@ -42,7 +42,7 @@ exports.getService = catchAsyncError(async (req, res, next) => {
 });
 
 exports.updateService = catchAsyncError(async (req, res, next) => {
-  console.log("", req.body);
+  console.log("updateService", req.body);
   const { id } = req.params;
 
   const [isUpdated, _] = await serviceModel.update(req.body, { where: { id }, returning: true });
@@ -63,6 +63,7 @@ exports.deleteService = catchAsyncError(async (req, res, next) => {
   res.status(200).json({ success: true, message: "Service deleted successfully", });
 });
 
+// admin controller for category
 exports.createCategory = catchAsyncError(async (req, res, next) => {
   console.log("createCategory", req.body);
   const { categoryName } = req.body;
@@ -72,15 +73,71 @@ exports.createCategory = catchAsyncError(async (req, res, next) => {
 });
 
 exports.getAllCategory = catchAsyncError(async (req, res, next) => {
+  console.log("getAllCategory", req.query);
+  const query = formattedQuery("categoryName", req.query);
+
+  const count = await categoryModel.count({ ...query });
+  const categories = await categoryModel.findAll({
+    ...query
+  });
+  res.status(200).json({ categories, count });
+});
+
+exports.getCategory = catchAsyncError(async (req, res, next) => {
+  console.log("getCategory", req.params);
+  const { id } = req.params;
+
+  const category = await categoryModel.findByPk(id, {
+    include: [{
+      model: serviceModel,
+      as: "services",
+      attributes: ["id", "title", "image"]
+    }]
+  });
+  if (!category) {
+    return next(new ErrorHandler("Category not found", 404));
+  }
+
+  res.status(200).json({ category });
+});
+
+exports.updateCategory = catchAsyncError(async (req, res, next) => {
+  console.log("updateCategory", req.body);
+  const { id } = req.params;
+
+  const [isUpdated, _] = await categoryModel.update(req.body, { where: { id }, returning: true });
+  if (isUpdated === 0) {
+    return next(new ErrorHandler("Category not found", 404));
+  }
+
+  res.status(200).json({ success: true, message: "Category updated successfully" })
+});
+
+exports.deleteCategory = catchAsyncError(async (req, res, next) => {
+  console.log("deleteCategory", req.params);
+
+  const isDeleted = await categoryModel.destroy({ where: { id: req.params.id } });
+  if (!isDeleted) {
+    return next(new ErrorHandler("Category not found", 404));
+  }
+  res.status(200).json({ success: true, message: "Category deleted successfully", });
+});
+
+// For provider and users
+exports.getCategoryWithService = catchAsyncError(async (req, res, next) => {
+  console.log("getCategoryWithService");
   const categories = await categoryModel.findAll({
     include: [{
       model: serviceModel,
       as: "services",
-      attributes: ["id", "title"]
+      attributes: ["id", "title", "image"]
     }]
   });
   res.status(200).json({ categories });
 });
-exports.getCategory = catchAsyncError(async (req, res, next) => { });
-exports.updateCategory = catchAsyncError(async (req, res, next) => { });
-exports.deleteCategory = catchAsyncError(async (req, res, next) => { });
+
+exports.getServicesWithCategory = catchAsyncError(async (req, res, next) => {
+  console.log("getServicesWithCategory");
+  const services = await serviceModel.findAll();
+  res.status(200).json({ services });
+});
