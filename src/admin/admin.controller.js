@@ -1,6 +1,23 @@
 const ErrorHandler = require("../../utils/errorHandler");
 const catchAsyncError = require("../../utils/catchAsyncError");
 const { userModel } = require("../user/user.model");
+const { s3Uploadv2 } = require("../../utils/s3");
+
+exports.postSingleImage = catchAsyncError(async (req, res, next) => {
+    const file = req.file;
+    if (!file) {
+        return next(new ErrorHandler("Please upload a file", 400));
+    }
+
+    const { mimetype } = req.file;
+    if (!mimetype.includes("image/")) {
+        return next(new ErrorHandler("File must an image", 400));
+    }
+
+    const results = await s3Uploadv2(file);
+    const location = results.Location && results.Location;
+    return res.status(201).json({ data: { location } });
+});
 
 exports.setAdmin = catchAsyncError(async (req, res, next) => {
     const user = await userModel.findByPk(1);

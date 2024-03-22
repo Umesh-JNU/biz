@@ -1,6 +1,6 @@
 const ErrorHandler = require("../../utils/errorHandler")
 const catchAsyncError = require("../../utils/catchAsyncError")
-const contentModel = require("./enquiry.model");
+const contentModel = require("./wishlist.model");
 
 const TT = "TERMS_AND_CONDITIONS";
 const PP = "PRIVACY_POLICY";

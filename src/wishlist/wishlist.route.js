@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const { auth, authRole } = require("../../middlewares/auth");
-const { getTT, getPP } = require("./enquiry.controller");
+const { getTT, getPP } = require("./wishlist.controller");
 
 router.get("/terms_and_conditions", getTT);
 router.get("/privacy_policy", getPP);

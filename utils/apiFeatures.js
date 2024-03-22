@@ -8,29 +8,15 @@ module.exports = (key, requestQuery) => {
      * requestQuery: requestQuery passed in api url
      */
   }
-  const { keyword, resultPerPage, currentPage, orderId, role, unassigned } = requestQuery;
+  const { keyword, resultPerPage, currentPage } = requestQuery;
   console.log(keyword, resultPerPage, currentPage);
   let query = { where: {} };
   if (keyword) {
     query.where = {
       ...query.where,
-      [key]: { [Op.regexp]: keyword },
+      [key]: { [Op.iRegexp]: keyword },
     };
   }
-  if (orderId) {
-    query.where = {
-      ...query.where,
-      [key]: parseInt(orderId)
-    };
-  }
-  if (unassigned) {
-    console.log({ unassigned })
-    query.where = {
-      ...query.where,
-      [unassigned]: null
-    }
-  }
-  console.log(JSON.stringify(query));
 
   if (resultPerPage && currentPage) {
     const cp = Number(currentPage); // cp = currentPage

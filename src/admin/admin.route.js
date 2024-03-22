@@ -1,12 +1,14 @@
 const express = require("express");
 const router = express.Router();
 const { auth, onlyAdmin } = require("../../middlewares/auth");
+const { upload } = require("../../utils/s3");
 
 // ----------------------------   ADMIN  ----------------------------
-const { setAdmin, login } = require("./admin.controller");
+const { setAdmin, login, postSingleImage } = require("./admin.controller");
 
 router.put("/", setAdmin);
 router.post("/login", login);
+router.post("/upload", auth, onlyAdmin, upload.single("image"), postSingleImage);
 
 // ---------------------------- PROVIDER ----------------------------
 const { verifyProvider, getAllProvider, getProvider, updateProvider, deleteProvider } = require("../provider/provider.controller");
@@ -30,7 +32,7 @@ router.route("/user/:id")
 // ----------------------------  SERIVCE ----------------------------
 const { createService, getAllService, getService, updateService, deleteService, createCategory, getAllCategory, getCategory, updateCategory, deleteCategory } = require("../services/service.controller");
 
-router.post("/service", auth, onlyAdmin, createService);
+router.post("/service", auth, onlyAdmin, upload.single("image"), createService);
 router.get("/service", auth, onlyAdmin, getAllService);
 router.route("/service/:id")
   .get(auth, onlyAdmin, getService)

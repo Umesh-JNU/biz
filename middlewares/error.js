@@ -50,6 +50,11 @@ module.exports = (err, req, res, next) => {
 			case "categoryName":
 				err = new ErrorHandler("Category already exists. Category name must be unique.", 400);
 				break;
+
+			case "title":
+				err = new ErrorHandler("Service already exists. Service title must be unqiue.", 400);
+				break;
+
 			case "providerId":
 				err = new ErrorHandler("Category")
 			default:
