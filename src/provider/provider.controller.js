@@ -336,7 +336,7 @@ exports.reUpload = catchAsyncError(async (req, res, next) => {
   const { userId } = req;
   console.log(userId);
 
-  const {mobile_no, country_code} = req.body;
+  const { mobile_no, country_code } = req.body;
   if (!mobile_no || !country_code) {
     return next(new ErrorHandler("Required mobile number and country code", 400));
   }
@@ -417,10 +417,21 @@ exports.getAvailability = catchAsyncError(async (req, res, next) => {
     return next(new ErrorHandler("Provider not found", 404));
   }
 
-  const timing = await availabilityModel.findAll({
+  let timing = await availabilityModel.findAll({
     where: { providerId: provider.id },
     attributes: ["weekday", "from", "to", "is_open"]
   });
+
+  if (!timing || timing.length === 0) {
+    const body = [...Array(7).keys()].map((i) => {
+      console.log({ i });
+      return {
+        weekday: `${i}`,
+        providerId: provider.id
+      };
+    });
+    timing = await availabilityModel.bulkCreate(body, { validate: true });
+  }
 
   res.status(200).json({
     avail_type: provider.avail_type,

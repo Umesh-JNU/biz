@@ -41,11 +41,11 @@ const availabilityModel = db.define("WeekDayAvailability", {
   },
   from: {
     type: DataTypes.TIME,
-    // defaultValue: '00:00:00'
+    defaultValue: '09:00:00'
   },
   to: {
     type: DataTypes.TIME,
-    // defaultValue: '00:00:00'
+    defaultValue: '22:00:00'
   },
   is_open: {
     type: DataTypes.BOOLEAN,
