@@ -1,7 +1,7 @@
 const ErrorHandler = require("../../utils/errorHandler");
 const catchAsyncError = require("../../utils/catchAsyncError");
 const bcrypt = require("bcryptjs");
-const { otpModel } = require("../user/user.model");
+const { otpModel, userModel } = require("../user/user.model");
 const { providerModel, proServiceModel, availabilityModel } = require("./provider.model");
 
 const { s3UploadMulti, s3Uploadv2 } = require("../../utils/s3");
@@ -9,6 +9,7 @@ const sendEmail = require("../../utils/sendEmail");
 const generateOTP = require("../../utils/otpGenerator");
 const { db } = require("../../config/database");
 const { serviceModel } = require("../services");
+const { Op } = require("sequelize");
 
 const ROLE = "Provider";
 const getMsg = (otp) => {
@@ -558,12 +559,33 @@ exports.getEnquiry = catchAsyncError(async (req, res, next) => {
   console.log("getEnquiry", req.query);
   let { date } = req.query;
   if (!date) {
-    date = new Date().toDateString();
+    date = new Date();
   }
 
-  console.log({ date });
-  const count = 0;
-  res.status(200).json({ count });
+  const todayMidTime = new Date(date);
+  todayMidTime.setHours(0, 0, 0, 0);
+
+  const comingDayMidTime = new Date(date);
+  comingDayMidTime.setDate(comingDayMidTime.getDate() + 1);
+  comingDayMidTime.setHours(0, 0, 0, 0);
+
+  console.log({ date, todayMidTime, comingDayMidTime });
+
+  const provider = await providerModel.findByPk(req.userId);
+  if (!provider) {
+    return next(new ErrorHandler("Provider not found", 404));
+  }
+
+  const enquiry = await provider.getEnquirer({
+    where: {
+      createdAt: {
+        [Op.gte]: todayMidTime,
+        [Op.lt]: comingDayMidTime,
+      }
+    }
+  });
+  
+  res.status(200).json({ count: enquiry.length });
 });
 // For Admin
 exports.verifyProvider = catchAsyncError(async (req, res, next) => { });

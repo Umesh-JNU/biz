@@ -66,6 +66,11 @@ const availabilityModel = db.define("WeekDayAvailability", {
       if (this.is_open && !this.to) {
         throw new Error('To time is required when is_open is true');
       }
+    },
+    validateToAndFrom() {
+      if (this.to === this.from) {
+        throw new Error('From and to time must be different');
+      }
     }
   }
 });
