@@ -45,7 +45,9 @@ module.exports = (err, req, res, next) => {
 	// sequelize duplicate key error
 	if (err.name === "SequelizeUniqueConstraintError") {
 		const { path } = err.errors[0];
-		console.log({ path })
+		const { table } = err?.parent;
+
+		console.log({ path, table })
 		switch (path) {
 			case "categoryName":
 				err = new ErrorHandler("Category already exists. Category name must be unique.", 400);
@@ -56,7 +58,14 @@ module.exports = (err, req, res, next) => {
 				break;
 
 			case "providerId":
-				err = new ErrorHandler("Category")
+				err = new ErrorHandler("Provider Id must be unique", 400);
+				break;
+
+			case "userId":
+				if (table === 'wishlist')
+					err = new ErrorHandler("Enquiry already created.", 400);
+				break;
+
 			default:
 				break;
 		}

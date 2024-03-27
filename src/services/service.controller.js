@@ -2,9 +2,11 @@ const ErrorHandler = require("../../utils/errorHandler");
 const catchAsyncError = require("../../utils/catchAsyncError");
 const formattedQuery = require("../../utils/apiFeatures");
 
-const { providerModel } = require("../provider/provider.model");
+const { providerModel, availabilityModel, proServiceModel } = require("../provider/provider.model");
 const { serviceModel, categoryModel } = require("./service.model");
 const { s3Uploadv2 } = require("../../utils/s3");
+const { db } = require("../../config/database");
+const { videoModel, postModel } = require("../posts/post.model");
 
 // ------------- for admin -----------------
 exports.createService = catchAsyncError(async (req, res, next) => {
@@ -140,4 +142,72 @@ exports.getServicesWithCategory = catchAsyncError(async (req, res, next) => {
   console.log("getServicesWithCategory");
   const services = await serviceModel.findAll();
   res.status(200).json({ services });
+});
+
+exports.getServiceAndProviders = catchAsyncError(async (req, res, next) => {
+  console.log("getServiceAndProviders", req.params);
+  const { id } = req.params;
+  const userId = req.userId;
+
+  const service = await serviceModel.findByPk(id, {
+    include: [{
+      model: providerModel,
+      as: "providers",
+      through: { attributes: [] },
+      attributes: ["id", "fullname", [db.literal(`COALESCE((
+        SELECT is_wishlist
+        FROM Wishlist
+        WHERE "serviceId" = ${id} AND "providerId" = providers.id AND "userId" = ${userId}
+      ), false)`), 'is_wishlist']]
+    }]
+  });
+  if (!service) {
+    return next(new ErrorHandler("Service not found", 404));
+  }
+
+  res.status(200).json({ service });
+});
+
+exports.getProviderDetails = catchAsyncError(async (req, res, next) => {
+  console.log("getProviderDetails", req.params);
+  const { providerId } = req.params;
+
+  const provider = await providerModel.findByPk(providerId, {
+    attributes: [
+      "id",
+      "fullname",
+      "email",
+      "profileImage",
+      "country_code",
+      "mobile_no",
+      "buisness_name",
+      "facebook",
+      "instagram",
+      "website",
+      "avail_type",
+      "is_avail"
+    ],
+    include: [{
+      model: videoModel,
+      as: "video",
+      attributes: ["id", "url"]
+    }, {
+      model: postModel,
+      as: "posts",
+      attributes: ["id", "url"]
+    }, {
+      model: availabilityModel,
+      as: "time",
+      attributes: ["weekday", "from", "to", "is_open"]
+    }, {
+      model: proServiceModel,
+      as: "ownService",
+      attributes: ["id", "desc", "charge"]
+    }]
+  });
+  if (!provider) {
+    return next(new ErrorHandler("Provider not found", 404));
+  }
+
+  res.status(200).json({ provider });
 });

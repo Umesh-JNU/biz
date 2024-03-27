@@ -1,16 +1,12 @@
 const bcrypt = require("bcryptjs");
 const ErrorHandler = require("../../utils/errorHandler");
 const catchAsyncError = require("../../utils/catchAsyncError");
-const {
-  userModel,
-  userLog,
-  otpModel,
-  WishList,
-} = require("./user.model");
+const { userModel, otpModel, wishlistModel } = require("./user.model");
 const { s3Uploadv2 } = require("../../utils/s3");
 const sendEmail = require("../../utils/sendEmail");
 const generateOTP = require("../../utils/otpGenerator");
-const { serviceModel } = require("../services");
+const { serviceModel } = require("../services/service.model");
+const { providerModel } = require("../provider/provider.model");
 
 const ROLE = "User";
 const getMsg = (otp) => {
@@ -263,43 +259,6 @@ exports.updatepassword = catchAsyncError(async (req, res, next) => {
   res.status(200).json({ message: "password updated" });
 });
 
-exports.addWishList = catchAsyncError(async (req, res, next) => {
-  const { userId } = req;
-  const user = userModel.findByPk(userId);
-  if (!user) {
-    return next(new ErrorHandler("User Does not exist"));
-  }
-  const wishlist = await WishList.create({
-    ...req.body,
-    userId,
-  });
-  try {
-    res.status(200).json({ wishlist });
-  } catch (error) {
-    res.status(500).json(error);
-  }
-});
-
-exports.getAllWishList = catchAsyncError(async (req, res, next) => {
-  const { userId } = req;
-  const wishlist = await WishList.findAll({ where: { userId } });
-  try {
-    res.status(200).json({ wishlist });
-  } catch (error) {
-    res.status(500).json(error);
-  }
-});
-
-exports.deleteWishList = catchAsyncError(async (req, res, next) => {
-  const { id } = req.params;
-  const deletedCount = await WishList.destroy({ where: { id } });
-  if (deletedCount === 0) {
-    // No wish list item was deleted
-    return next(new ErrorHandler("No wishlist Found", 404));
-  }
-  res.status(200).json({ message: "Wish List Deleted" });
-});
-
 exports.getProfile = catchAsyncError(async (req, res, next) => {
   const { userId } = req;
   const user = await userModel.findByPk(userId);
@@ -359,12 +318,21 @@ exports.deleteAccount = catchAsyncError(async (req, res, next) => {
     .json({ success: true, message: "User deleted successfully" });
 });
 
+const checkAndCreateRow = async (query) => {
+  console.log("checkAndCreateRow", { query });
+  let row = await wishlistModel.findOne({ where: query });
+  if (!row) {
+    row = await wishlistModel.create(query);
+  }
+  return row;
+}
+
 // enquiry
 exports.createEnquiry = catchAsyncError(async (req, res, next) => {
   console.log("createEnquiry", req.userId, req.body);
-  const { providerId } = req.body;
-  if (!providerId) {
-    return next(new ErrorHandler("Please send a provider ID", 400));
+  const { providerId, serviceId } = req.body;
+  if (!providerId || !serviceId) {
+    return next(new ErrorHandler("Please send provider and service ID", 400));
   }
 
   const user = await userModel.findByPk(req.userId);
@@ -372,7 +340,8 @@ exports.createEnquiry = catchAsyncError(async (req, res, next) => {
     return next(new ErrorHandler("User not found", 404));
   }
 
-  await user.addEnquiry(providerId);
+  await checkAndCreateRow({ userId: user.id, serviceId, providerId });
+
   res.status(201).json({ message: "Enquiry created successfully" });
 });
 
@@ -384,14 +353,78 @@ exports.getAllEnquiry = catchAsyncError(async (req, res, next) => {
     return next(new ErrorHandler("User not found", 404));
   }
 
-  const enquiry = await user.getEnquiry({
-    attributes: ["id", "fullname"],
+  const enquiries = await user.getWishlists({
+    attributes: ["id", "createdAt", "is_wishlist"],
     include: [{
       model: serviceModel,
-      as: "services"
+      attributes: ["id", "title", "image"]
+    }, {
+      model: providerModel,
+      attributes: ["id", "fullname"]
     }]
   });
-  res.status(200).json({ enquiry });
+
+  res.status(200).json({ enquiries });
+});
+
+// wishlist
+exports.addWishList = catchAsyncError(async (req, res, next) => {
+  console.log("addWishlist", req.body);
+  const userId = req.userId;
+  const { providerId, serviceId } = req.body;
+  if (!providerId || !serviceId) {
+    return next(new ErrorHandler("Send provider Id and service Id", 400));
+  }
+
+  const user = userModel.findByPk(userId);
+  if (!user) {
+    return next(new ErrorHandler("User not found", 404));
+  }
+
+  const wishlist = await checkAndCreateRow({
+    userId, providerId, serviceId
+  });
+  if (wishlist && !wishlist.is_wishlist) {
+    wishlist.is_wishlist = true;
+    await wishlist.save();
+  }
+
+  res.status(200).json({ wishlist });
+});
+
+exports.getAllWishList = catchAsyncError(async (req, res, next) => {
+  console.log("getAllWishList", req.userId);
+
+  const user = await userModel.findByPk(req.userId);
+  if (!user) {
+    return next(new ErrorHandler("User not found", 404));
+  }
+
+  const wishlists = await user.getWishlists({
+    attributes: ["id", "createdAt", "is_wishlist"],
+    where: { is_wishlist: true },
+    include: [{
+      model: serviceModel,
+      attributes: ["id", "title", "image"]
+    }, {
+      model: providerModel,
+      attributes: ["id", "fullname"]
+    }]
+  });
+
+  res.status(200).json({ wishlists });
+});
+
+exports.deleteWishList = catchAsyncError(async (req, res, next) => {
+  console.log("deleteWishlist", req.params);
+  const { id } = req.params;
+
+  const [isDeleted, _] = await wishlistModel.update({ is_wishlist: false }, { where: { id, userId: req.userId, is_wishlist: true } });
+  if (isDeleted === 0) {
+    return next(new ErrorHandler("Wishlist not found", 404));
+  }
+
+  res.status(200).json({ success: true, message: "Wish List Deleted" });
 });
 
 // For Admin

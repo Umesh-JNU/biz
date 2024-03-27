@@ -28,9 +28,6 @@ router.put("/resend-otp", resendOTP);
 router.post("/forgotpassword", forgotPassword);
 router.post("/verifyOTP", verifyOTP);
 router.post("/updatepassword/:id", updatepassword);
-router.post("/addWishList", auth, addWishList);
-router.get("/getAllWishList", auth, getAllWishList);
-router.delete("/deleteWishList/:id", auth, deleteWishList);
 router.get("/get", getAlluser);
 router
   .route("/profile")
@@ -43,5 +40,12 @@ router.delete("/delete", auth, deleteAccount);
 router.route("/enquiry")
   .post(auth, createEnquiry)
   .get(auth, getAllEnquiry);
+
+// wishlist
+router.route("/wishlist")
+  .post(auth, addWishList)
+  .get(auth, getAllWishList);
+router.delete("/wishlist/:id", auth, deleteWishList);
+
 
 module.exports = router;

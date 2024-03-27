@@ -1,4 +1,4 @@
-const { userModel, otpModel } = require("./user.model")
+const { userModel, otpModel, wishlistModel } = require("./user.model")
 const userRoute = require("./user.route");
 
-module.exports = { userRoute, userModel, otpModel };
+module.exports = { userRoute, userModel, otpModel, wishlistModel };

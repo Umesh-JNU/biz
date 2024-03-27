@@ -1,9 +1,8 @@
 const adminRoute = require('./admin/admin.route');
-const { userRoute, userModel, otpModel } = require('./user');
+const { userRoute, userModel, otpModel, wishlistModel } = require('./user');
 const { categoryRoute, serviceRoute, categoryModel, serviceModel } = require('./services');
 const { providerRoute, providerModel, proServiceModel, availabilityModel } = require('./provider');
 const { albumRoute, videoModel, postModel } = require('./posts');
-// const { enquiryRoute, enquiryModel } = require("./enquiry");
 const { contentRoute } = require("./contents");
 
 // One Category has many service and one service belongs to exactly on category
@@ -46,11 +45,16 @@ otpModel.belongsTo(providerModel, { foreignKey: "providerId", as: "provider" });
 userModel.hasOne(otpModel, { foreignKey: "userId", as: "otp" });
 otpModel.belongsTo(userModel, { foreignKey: "userId", as: "user" });
 
-providerModel.belongsToMany(userModel, { through: "Enquiry", foreignKey: "providerId", as: "enquirer" });
-userModel.belongsToMany(providerModel, { through: "Enquiry", foreignKey: "userId", as: "enquiry" });
+// association between user and (provider + service)
+userModel.hasMany(wishlistModel, { foreignKey: "userId", as: "wishlists" });
+wishlistModel.belongsTo(userModel, { foreignKey: "userId" });
 
-// userModel.hasOne(enquiryModel, { foreignKey: "userId", as: "enquiry" });
-// enquiryModel.belongsTo(userModel, { foreignKey: "userId", as: "user" });
+providerModel.hasMany(wishlistModel, { foreignKey: "providerId" });
+wishlistModel.belongsTo(providerModel, { foreignKey: "providerId" });
+
+serviceModel.hasMany(wishlistModel, { foreignKey: "serviceId" });
+wishlistModel.belongsTo(serviceModel, { foreignKey: "serviceId" });
+
 
 const insertQuery = async () => {
   // create admin

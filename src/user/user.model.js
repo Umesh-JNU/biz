@@ -84,50 +84,8 @@ const userModel = db.define("Users", {
       notEmpty: { msg: "Mobile No. is required" }
     },
   },
-  
+
 });
-
-const userLog = db.define(
-  "UserLog",
-  {
-    userId: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-    },
-    serviceId: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-    },
-    amount: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-    },
-    status: {
-      type: DataTypes.ENUM(["placed", "completed", "cancelled"]),
-      defaultValue: "placed",
-    },
-  },
-  {
-    timestamps: true,
-  }
-);
-
-const WishList = db.define(
-  "WishList",
-  {
-    userId: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-    },
-    serviceId: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-    },
-  },
-  {
-    timestamps: true,
-  }
-);
 
 userModel.prototype.comparePassword = async function (enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
@@ -186,4 +144,30 @@ otpModel.prototype.isValid = async function (givenOTP) {
   return timeDifference <= otpValidityDuration;
 };
 
-module.exports = { userModel, userLog, otpModel, WishList };
+const wishlistModel = db.define("Wishlist", {
+  userId: {
+    type: DataTypes.INTEGER,
+    allowNull: false
+  },
+  providerId: {
+    type: DataTypes.UUID,
+    allowNull: false
+  },
+  serviceId: {
+    type: DataTypes.INTEGER,
+    allowNull: false
+  },
+  is_wishlist: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false
+  }
+}, {
+  indexes: [{
+    unique: true,
+    fields: ["userId", "providerId", "serviceId"]
+  }],
+  timestamps: true,
+  tableName: "wishlist"
+});
+
+module.exports = { userModel, otpModel, wishlistModel };

@@ -1,7 +1,7 @@
 const ErrorHandler = require("../../utils/errorHandler");
 const catchAsyncError = require("../../utils/catchAsyncError");
 const bcrypt = require("bcryptjs");
-const { otpModel, userModel } = require("../user/user.model");
+const { otpModel, userModel, wishlistModel } = require("../user/user.model");
 const { providerModel, proServiceModel, availabilityModel } = require("./provider.model");
 
 const { s3UploadMulti, s3Uploadv2 } = require("../../utils/s3");
@@ -576,16 +576,17 @@ exports.getEnquiry = catchAsyncError(async (req, res, next) => {
     return next(new ErrorHandler("Provider not found", 404));
   }
 
-  const enquiry = await provider.getEnquirer({
+  const count = await wishlistModel.count({
     where: {
+      providerId: req.userId,
       createdAt: {
         [Op.gte]: todayMidTime,
         [Op.lt]: comingDayMidTime,
       }
     }
   });
-  
-  res.status(200).json({ count: enquiry.length });
+
+  res.status(200).json({ count });
 });
 // For Admin
 exports.verifyProvider = catchAsyncError(async (req, res, next) => { });
