@@ -35,7 +35,13 @@ exports.getService = catchAsyncError(async (req, res, next) => {
   console.log("getService", req.params);
   const { id } = req.params;
 
-  const service = await serviceModel.findByPk(id);
+  const service = await serviceModel.findByPk(id, {
+    include: [{
+      model: categoryModel,
+      as: "category",
+      attributes: ["id", "categoryName"]
+    }]
+  });
   if (!service) {
     return next(new ErrorHandler("Service not found", 404));
   }
