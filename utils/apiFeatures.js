@@ -1,7 +1,6 @@
 const { Op } = require("sequelize");
-const { roleModel } = require("../src/user");
 
-module.exports = (key, requestQuery) => {
+module.exports = (key, requestQuery, multikey) => {
   {
     /**
      * key: key for which value to be searched
@@ -15,10 +14,26 @@ module.exports = (key, requestQuery) => {
     order: [['createdAt', 'DESC']]
   };
   if (keyword) {
-    query.where = {
-      ...query.where,
-      [key]: { [Op.iRegexp]: keyword },
-    };
+    if (multikey) {
+      const multiSeachOptions = multikey.reduce(
+        (obj, key) => ({
+          ...obj,
+          [key]: { [Op.iRegexp]: keyword }
+        }),
+        {}
+      );
+
+      query.where = {
+        ...query.where,
+        [Op.or]: multiSeachOptions
+      };
+      
+    } else {
+      query.where = {
+        ...query.where,
+        [key]: { [Op.iRegexp]: keyword },
+      };
+    }
   }
 
   if (resultPerPage && currentPage) {

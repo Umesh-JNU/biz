@@ -21,13 +21,13 @@ router.route("/provider/:id")
   .delete(auth, onlyAdmin, deleteProvider);
 
 // ----------------------------   USER   ----------------------------
-const { getAllUser, getUser, updateUser, deleteUser } = require("../user/user.controller");
+const { getAllUser, getUser, updateUserData, deleteAccount } = require("../user/user.controller");
 
 router.get("/user", auth, onlyAdmin, getAllUser);
 router.route("/user/:id")
   .get(auth, onlyAdmin, getUser)
-  .put(auth, onlyAdmin, updateUser)
-  .delete(auth, onlyAdmin, deleteUser);
+  .put(auth, onlyAdmin, updateUserData)
+  .delete(auth, onlyAdmin, deleteAccount);
 
 // ----------------------------  SERIVCE ----------------------------
 const { createService, getAllService, getService, updateService, deleteService, createCategory, getAllCategory, getCategory, updateCategory, deleteCategory } = require("../services/service.controller");

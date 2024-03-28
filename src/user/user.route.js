@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const { auth, authRole } = require("../../middlewares/auth");
+const { auth } = require("../../middlewares/auth");
 const {
   register,
   login,
@@ -13,7 +13,6 @@ const {
   deleteWishList,
   updateUserData,
   getProfile,
-  getAlluser,
   deleteAccount,
   resendOTP,
   createEnquiry,
@@ -28,7 +27,6 @@ router.put("/resend-otp", resendOTP);
 router.post("/forgotpassword", forgotPassword);
 router.post("/verifyOTP", verifyOTP);
 router.post("/updatepassword/:id", updatepassword);
-router.get("/get", getAlluser);
 router
   .route("/profile")
   .get(auth, getProfile)

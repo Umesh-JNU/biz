@@ -12,7 +12,7 @@ const { videoModel, postModel } = require("../posts/post.model");
 exports.createService = catchAsyncError(async (req, res, next) => {
   console.log("createService", req.body, req.file);
   if (!req.body.categoryId) {
-    return next(new ErrorHandler("Please a category", 400));
+    return next(new ErrorHandler("Please select a category", 400));
   }
 
   const service = await serviceModel.create(req.body);

@@ -5,8 +5,10 @@ const { userModel, otpModel, wishlistModel } = require("./user.model");
 const { s3Uploadv2 } = require("../../utils/s3");
 const sendEmail = require("../../utils/sendEmail");
 const generateOTP = require("../../utils/otpGenerator");
+const formattedQuery = require("../../utils/apiFeatures");
 const { serviceModel } = require("../services/service.model");
 const { providerModel } = require("../provider/provider.model");
+const { Op } = require("sequelize");
 
 const ROLE = "User";
 const getMsg = (otp) => {
@@ -285,39 +287,56 @@ exports.getProfile = catchAsyncError(async (req, res, next) => {
   });
 });
 
+// for admin as well as user
 exports.updateUserData = catchAsyncError(async (req, res, next) => {
-  const { userId } = req;
-  const user_check = await userModel.findByPk(userId);
-  let imageUrl;
-  req.file && (imageUrl = await s3Uploadv2(req.file));
-  if (!user_check) {
-    return next(new ErrorHandler("User do not exist"));
-  } else {
-    imageUrl
-      ? await userModel.update(
-        { ...req.body, profileImage: imageUrl.Location },
-        { where: { id: userId } }
-      )
-      : await userModel.update({ ...req.body }, { where: { id: userId } });
-    res.status(200).json({ message: "Updated" });
-  }
-});
+  console.log("updateUserData", req.body, req.params);
 
-exports.getAlluser = catchAsyncError(async (req, res, next) => {
-  const user = await userModel.findAll();
-  res.status(200).json({ user });
+  const { userId } = req;
+  const { id } = req.params;
+
+  const user_check = await userModel.findByPk(userId);
+  if (!user_check) {
+    return next(new ErrorHandler("User do not exist", 404));
+  }
+
+  if (req.file) {
+    const result = await s3Uploadv2(req.file);
+    req.body.profileImage = result.Location;
+  }
+
+  await userModel.update(req.body, {
+    where: {
+      [Op.or]: {
+        id: userId,
+        id
+      }
+    }
+  });
+
+  res.status(200).json({ message: "Updated" });
 });
 
 exports.deleteAccount = catchAsyncError(async (req, res, next) => {
   const { userId } = req;
   const { id } = req.params;
 
-  await userModel.destroy({ where: { id: userId || id } });
-  res
-    .status(200)
-    .json({ success: true, message: "User deleted successfully" });
+  const isDeleted = await userModel.destroy({
+    where: {
+      [Op.or]: {
+        id: userId,
+        id
+      }
+    }
+  });
+  if (!isDeleted) {
+    return next(new ErrorHandler("User0 not found", 404));
+  }
+
+  await wishlistModel.destroy({ where: { [Op.or]: { id, id: userId } } });
+  res.status(200).json({ success: true, message: "User deleted successfully" });
 });
 
+// enquiry
 const checkAndCreateRow = async (query) => {
   console.log("checkAndCreateRow", { query });
   let row = await wishlistModel.findOne({ where: query });
@@ -327,7 +346,6 @@ const checkAndCreateRow = async (query) => {
   return row;
 }
 
-// enquiry
 exports.createEnquiry = catchAsyncError(async (req, res, next) => {
   console.log("createEnquiry", req.userId, req.body);
   const { providerId, serviceId } = req.body;
@@ -428,7 +446,27 @@ exports.deleteWishList = catchAsyncError(async (req, res, next) => {
 });
 
 // For Admin
-exports.getAllUser = catchAsyncError(async (req, res, next) => { });
-exports.getUser = catchAsyncError(async (req, res, next) => { });
-exports.updateUser = catchAsyncError(async (req, res, next) => { });
-exports.deleteUser = catchAsyncError(async (req, res, next) => { });
+exports.getAllUser = catchAsyncError(async (req, res, next) => {
+  console.log("getAllUser", req.query);
+  const query = formattedQuery("", req.query, ["email", "fullname", "mobile_no"]);
+
+  query.where = { ...query.where, role: ROLE };
+  const count = await userModel.count({ ...query });
+  const users = await userModel.findAll({
+    ...query,
+    attributes: ["id", "email", "fullname", "isVerified", "country_code", "profileImage", "mobile_no"]
+  });
+  res.status(200).json({ users, count });
+});
+
+exports.getUser = catchAsyncError(async (req, res, next) => {
+  console.log("getUser", req.params);
+  const { id } = req.params;
+
+  const user = await userModel.findByPk(id);
+  if (!user) {
+    return next(new ErrorHandler("User not found", 404));
+  }
+
+  res.status(200).json({ user });
+});
