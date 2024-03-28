@@ -1,15 +1,17 @@
 const ErrorHandler = require("../../utils/errorHandler");
 const catchAsyncError = require("../../utils/catchAsyncError");
 const bcrypt = require("bcryptjs");
-const { otpModel, userModel, wishlistModel } = require("../user/user.model");
+const { serviceModel } = require("../services");
+const { otpModel, wishlistModel } = require("../user/user.model");
 const { providerModel, proServiceModel, availabilityModel } = require("./provider.model");
 
 const { s3UploadMulti, s3Uploadv2 } = require("../../utils/s3");
 const sendEmail = require("../../utils/sendEmail");
 const generateOTP = require("../../utils/otpGenerator");
+const formattedQuery = require("../../utils/apiFeatures");
 const { db } = require("../../config/database");
-const { serviceModel } = require("../services");
 const { Op } = require("sequelize");
+const { videoModel, postModel } = require("../posts/post.model");
 
 const ROLE = "Provider";
 const getMsg = (otp) => {
@@ -368,10 +370,18 @@ exports.deleteAccount = catchAsyncError(async (req, res, next) => {
   const { userId } = req;
   const { id } = req.params;
 
-  await providerModel.destroy({ where: { id: userId || id } });
-  res
-    .status(200)
-    .json({ success: true, message: "Provider deleted successfully" });
+  const provider = await providerModel.findByPk(id || userId);
+  if (!provider) {
+    return next(new ErrorHandler("Provider not found", 404));
+  }
+
+  await provider.removeCategories();
+  await provider.removeServices();
+  await provider.removeOwnService();
+  await availabilityModel.destroy({ where: { providerId: provider.id } });
+
+  await provider.destroy();
+  res.status(200).json({ success: true, message: "Provider deleted successfully" });
 });
 
 exports.updateAvailability = catchAsyncError(async (req, res, next) => {
@@ -513,7 +523,7 @@ exports.createProService = catchAsyncError(async (req, res, next) => {
     return next(new ErrorHandler("Provider not found", 404));
   }
 
-  await provider.createOwnService(req.body);
+  await proServiceModel.findOrCreate({ where: { ...req.body, providerId: provider.id } });
   res.status(201).json({ message: "Service create successfully" });
 });
 
@@ -526,7 +536,12 @@ exports.getProServices = catchAsyncError(async (req, res, next) => {
     return next(new ErrorHandler("Provider not found", 404));
   }
 
-  const services = await provider.getOwnService({ attributes: ["id", "desc", "charge", "serviceId"] });
+  const services = await provider.getOwnService({
+    attributes: ["id", "desc", "charge", "serviceId"], include: [{
+      model: serviceModel,
+      as: "serviceTitle", attributes: ["id", "title"]
+    }]
+  });
   res.status(200).json({ services });
 });
 
@@ -534,8 +549,9 @@ exports.updateProService = catchAsyncError(async (req, res, next) => {
   console.log("updateProServices", req.body);
   const { id } = req.params;
 
-  const [isUpdated, result] = await proServiceModel.update(req.body, { where: { id }, returning: true });
+  delete req.body.serviceId;
 
+  const [isUpdated, result] = await proServiceModel.update(req.body, { where: { id }, returning: true });
   if (isUpdated === 0) {
     return next(new ErrorHandler("Something went wrong", 500));
   }
@@ -589,8 +605,64 @@ exports.getEnquiry = catchAsyncError(async (req, res, next) => {
   res.status(200).json({ count });
 });
 // For Admin
-exports.verifyProvider = catchAsyncError(async (req, res, next) => { });
-exports.getAllProvider = catchAsyncError(async (req, res, next) => { });
-exports.getProvider = catchAsyncError(async (req, res, next) => { });
+exports.verifyProvider = catchAsyncError(async (req, res, next) => {
+  console.log("verifyProvider");
+  const userId = req.userId;
+  const provider = await providerModel.findByPk(userId);
+  if (!provider) {
+    return next(new ErrorHandler("Provider not found", 404));
+  }
+
+  provider.onHold = false;
+  await provider.save();
+
+  res.status(200).json({ success: true, message: "Provider verified successfully" });
+});
+
+exports.getAllProvider = catchAsyncError(async (req, res, next) => {
+  console.log("getAllProvider", req.query);
+  const query = formattedQuery("", req.query, ["email", "fullname", "mobile_no"]);
+
+  const count = await providerModel.count({ ...query });
+  const providers = await providerModel.findAll({
+    ...query,
+    attributes: ["id", "email", "fullname", "isVerified", "onHold", "country_code", "profileImage", "mobile_no"]
+  });
+  res.status(200).json({ providers, count });
+});
+
+exports.getProvider = catchAsyncError(async (req, res, next) => {
+  console.log("getProvider", req.params);
+  const { id } = req.params;
+
+  const provider = await providerModel.findByPk(id, {
+    attributes: {
+      exclude: ["password", "role"]
+    },
+    include: [{
+      model: videoModel,
+      as: "video",
+      attributes: ["id", "url"]
+    }, {
+      model: postModel,
+      as: "posts",
+      attributes: ["id", "url"]
+    }, {
+      model: availabilityModel,
+      as: "time",
+      attributes: ["weekday", "from", "to", "is_open"]
+    }, {
+      model: proServiceModel,
+      as: "ownService",
+      attributes: ["id", "desc", "charge"]
+    }]
+  });
+  if (!provider) {
+    return next(new ErrorHandler("Provider not found", 404));
+  }
+
+  res.status(200).json({ provider });
+});
+
 exports.updateProvider = catchAsyncError(async (req, res, next) => { });
 exports.deleteProvider = catchAsyncError(async (req, res, next) => { });
