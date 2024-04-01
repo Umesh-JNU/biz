@@ -47,8 +47,11 @@ router.route("/category/:id")
   .delete(auth, onlyAdmin, deleteCategory);
 
 // ----------------------------  CONTENT ----------------------------
-const { createUpdateContent } = require("../contents/content.controller");
+const { createUpdateContent, getContent, deleteContent } = require("../contents/content.controller");
 
-router.post("/content", auth, onlyAdmin, createUpdateContent);
+router.route("/content")
+  .get(auth, onlyAdmin, getContent)
+  .delete(auth, onlyAdmin, deleteContent)
+  .post(auth, onlyAdmin, createUpdateContent);
 
 module.exports = router;

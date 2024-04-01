@@ -29,6 +29,17 @@ exports.getContent = catchAsyncError(async (req, res, next) => {
 	res.status(200).json({ pp, tt });
 });
 
+exports.deleteContent = catchAsyncError(async (req, res, next) => {
+	console.log("", req.query);
+	const isDeleted = await contentModel.destroy({ where: { title: req.query.type } });
+	if (!isDeleted) {
+		return next(new ErrorHandler("Content not found", 404));
+	}
+
+	res.status(200).json({ success: true, message: "Content deleted successfully" });
+});
+
+
 exports.getTT = catchAsyncError(async (req, res, next) => {
 	console.log("getTT");
 	const content = await contentModel.findOne({
