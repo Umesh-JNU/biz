@@ -339,10 +339,10 @@ exports.reUpload = catchAsyncError(async (req, res, next) => {
   const { userId } = req;
   console.log(userId);
 
-  const { mobile_no, country_code } = req.body;
-  if (!mobile_no || !country_code) {
-    return next(new ErrorHandler("Required mobile number and country code", 400));
-  }
+  // const { mobile_no, country_code } = req.body;
+  // if (!mobile_no || !country_code) {
+  //   return next(new ErrorHandler("Required mobile number and country code", 400));
+  // }
   if (!req.file) {
     return next(new ErrorHandler("Please upload your document", 400));
   }

@@ -1,11 +1,11 @@
 const express = require("express");
 const {
-  getAllPromotion,
-  getPromotion,
-} = require("../controllers/promotionController");
+  getAllBanner,
+  getBanner,
+} = require("./banner.controller");
 const router = express.Router();
 
-router.get("/all", getAllPromotion);
-router.get("/:id", getPromotion);
+router.get("/", getAllBanner);
+router.get("/:id", getBanner);
 
 module.exports = router;

@@ -18,13 +18,14 @@ app.use(
   })
 );
 
-const { userRoute, providerRoute, categoryRoute, serviceRoute, adminRoute, albumRoute, contentRoute } = require('./src');
+const { userRoute, providerRoute, categoryRoute, serviceRoute, adminRoute, albumRoute, contentRoute, bannerRoute } = require('./src');
 
 app.get("/", (req, res, next) => res.json({ message: "Server is running" }));
 
 app.use("/api/users", userRoute);
 app.use("/api/admin", adminRoute);
 app.use("/api/album", albumRoute);
+app.use("/api/banner", bannerRoute);
 app.use("/api/content", contentRoute);
 app.use("/api/service", serviceRoute);
 app.use("/api/category", categoryRoute);
