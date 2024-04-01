@@ -30,7 +30,7 @@ exports.getContent = catchAsyncError(async (req, res, next) => {
 });
 
 exports.deleteContent = catchAsyncError(async (req, res, next) => {
-	console.log("", req.query);
+	console.log("deleteContent", req.query);
 	const isDeleted = await contentModel.destroy({ where: { title: req.query.type } });
 	if (!isDeleted) {
 		return next(new ErrorHandler("Content not found", 404));

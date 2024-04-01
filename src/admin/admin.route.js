@@ -50,8 +50,15 @@ router.route("/category/:id")
 const { createUpdateContent, getContent, deleteContent } = require("../contents/content.controller");
 
 router.route("/content")
-  .get(auth, onlyAdmin, getContent)
-  .delete(auth, onlyAdmin, deleteContent)
-  .post(auth, onlyAdmin, createUpdateContent);
+.get(auth, onlyAdmin, getContent)
+.delete(auth, onlyAdmin, deleteContent)
+.post(auth, onlyAdmin, createUpdateContent);
+
+// ----------------------------  BANNER ----------------------------
+router.post("/promotion/create", auth, isAdmin, createPromotion);
+router
+  .route("/promotion/:id")
+  .put(auth, isAdmin, updatePromotion)
+  .delete(auth, isAdmin, deletePromotion);
 
 module.exports = router;

@@ -654,7 +654,12 @@ exports.getProvider = catchAsyncError(async (req, res, next) => {
     }, {
       model: proServiceModel,
       as: "ownService",
-      attributes: ["id", "desc", "charge"]
+      attributes: ["id", "desc", "charge"],
+      include: [{
+        model: serviceModel,
+        as: "serviceTitle",
+        attributes: ["id", "title", "image"]
+      }]
     }]
   });
   if (!provider) {
