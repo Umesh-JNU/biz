@@ -164,7 +164,13 @@ exports.getServiceAndProviders = catchAsyncError(async (req, res, next) => {
         SELECT is_wishlist
         FROM Wishlist
         WHERE "serviceId" = ${id} AND "providerId" = providers.id AND "userId" = ${userId}
-      ), false)`), 'is_wishlist']]
+      ), false)`), 'is_wishlist'],
+      [db.literal(`(
+        SELECT url
+        FROM posts
+        WHERE "providerId" = providers.id LIMIT 1
+      )`), 'image'],
+    ]
     }]
   });
   if (!service) {

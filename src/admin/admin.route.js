@@ -11,13 +11,13 @@ router.post("/login", login);
 router.post("/upload", auth, onlyAdmin, upload.single("image"), postSingleImage);
 
 // ---------------------------- PROVIDER ----------------------------
-const { verifyProvider, getAllProvider, getProvider, updateProvider, deleteProvider } = require("../provider/provider.controller");
+const { verifyProvider, getAllProvider, getProvider, updateProfile, deleteAccount: deleteProvider } = require("../provider/provider.controller");
 
 router.get("/provider", auth, onlyAdmin, getAllProvider);
 router.put("provider/verify", auth, onlyAdmin, verifyProvider);
 router.route("/provider/:id")
   .get(auth, onlyAdmin, getProvider)
-  .put(auth, onlyAdmin, updateProvider)
+  .put(auth, onlyAdmin, updateProfile)
   .delete(auth, onlyAdmin, deleteProvider);
 
 // ----------------------------   USER   ----------------------------

@@ -21,6 +21,9 @@ const postModel = db.define("Post", {
       notEmpty: { msg: "Url for post is required" }
     }
   }
-}, { timestamps: true });
+}, {
+  tableName: "posts",
+  timestamps: true
+});
 
 module.exports = { postModel, videoModel };

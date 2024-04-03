@@ -1,7 +1,7 @@
 const ErrorHandler = require("../../utils/errorHandler");
 const catchAsyncError = require("../../utils/catchAsyncError");
 const bcrypt = require("bcryptjs");
-const { serviceModel } = require("../services");
+const { serviceModel, categoryModel } = require("../services");
 const { otpModel, wishlistModel } = require("../user/user.model");
 const { providerModel, proServiceModel, availabilityModel } = require("./provider.model");
 
@@ -318,9 +318,13 @@ exports.verifyOTP = catchAsyncError(async (req, res, next) => {
 exports.updateProfile = catchAsyncError(async (req, res, next) => {
   console.log("Update provider", req.body);
   const { userId } = req;
-  console.log(userId);
+  let { id } = req.params;
+  if (!id) {
+    id = userId;
+  }
+  console.log(userId, id);
 
-  const provider = await providerModel.findByPk(userId);
+  const provider = await providerModel.findByPk(id);
   if (!provider) {
     return next(new ErrorHandler("Provider do not exist", 404));
   } else {
@@ -329,7 +333,7 @@ exports.updateProfile = catchAsyncError(async (req, res, next) => {
       req.body.profileImage = result.Location && result.Location;
     }
 
-    await providerModel.update(req.body, { where: { id: userId } });
+    await providerModel.update(req.body, { where: { id } });
     res.status(200).json({ message: "Updated" });
   }
 });
@@ -368,9 +372,11 @@ exports.reUpload = catchAsyncError(async (req, res, next) => {
 
 exports.deleteAccount = catchAsyncError(async (req, res, next) => {
   const { userId } = req;
-  const { id } = req.params;
-
-  const provider = await providerModel.findByPk(id || userId);
+  let { id } = req.params;
+  if (!id) {
+    id = userId;
+  }
+  const provider = await providerModel.findByPk(id);
   if (!provider) {
     return next(new ErrorHandler("Provider not found", 404));
   }
@@ -514,6 +520,24 @@ exports.updateMyCategory = catchAsyncError(async (req, res, next) => {
 });
 
 //  Providers service 
+exports.getMyServices = catchAsyncError(async (req, res, next) => {
+  console.log("getMyServices", req.params);
+
+  const provider = await providerModel.findByPk(req.userId);
+  if (!provider) {
+    return next(new ErrorHandler("Provider not found", 404));
+  }
+
+  const myCategory = await provider.getCategories();
+  const myCategoryList = myCategory.map(({ id }) => (id));
+  const services = await serviceModel.findAll({
+    where: { categoryId: myCategoryList },
+    attributes: ["id", "title"]
+  });
+
+  res.status(200).json({ services });
+});
+
 exports.createProService = catchAsyncError(async (req, res, next) => {
   console.log("createProService", req.body);
   const userId = req.userId;
@@ -523,7 +547,20 @@ exports.createProService = catchAsyncError(async (req, res, next) => {
     return next(new ErrorHandler("Provider not found", 404));
   }
 
-  await proServiceModel.findOrCreate({ where: { ...req.body, providerId: provider.id } });
+  const isMyService = await proServiceModel.findOne({
+    where: {
+      serviceId: req.body.serviceId,
+      providerId: provider.id
+    }
+  });
+  console.log({ isMyService })
+  if (isMyService) {
+    return next(new ErrorHandler("Service already exist", 400));
+  }
+
+  await proServiceModel.create({ ...req.body, providerId: provider.id });
+  await provider.addServices(req.body.serviceId);
+
   res.status(201).json({ message: "Service create successfully" });
 });
 
@@ -668,6 +705,3 @@ exports.getProvider = catchAsyncError(async (req, res, next) => {
 
   res.status(200).json({ provider });
 });
-
-exports.updateProvider = catchAsyncError(async (req, res, next) => { });
-exports.deleteProvider = catchAsyncError(async (req, res, next) => { });

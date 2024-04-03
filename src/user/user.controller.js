@@ -292,9 +292,12 @@ exports.updateUserData = catchAsyncError(async (req, res, next) => {
   console.log("updateUserData", req.body, req.params);
 
   const { userId } = req;
-  const { id } = req.params;
+  let { id } = req.params;
+  if (!id) {
+    id = userId;
+  }
 
-  const user_check = await userModel.findByPk(userId);
+  const user_check = await userModel.findByPk(id);
   if (!user_check) {
     return next(new ErrorHandler("User do not exist", 404));
   }
@@ -305,12 +308,7 @@ exports.updateUserData = catchAsyncError(async (req, res, next) => {
   }
 
   await userModel.update(req.body, {
-    where: {
-      [Op.or]: {
-        id: userId,
-        id
-      }
-    }
+    where: { id }
   });
 
   res.status(200).json({ message: "Updated" });
@@ -318,21 +316,19 @@ exports.updateUserData = catchAsyncError(async (req, res, next) => {
 
 exports.deleteAccount = catchAsyncError(async (req, res, next) => {
   const { userId } = req;
-  const { id } = req.params;
-
+  let { id } = req.params;
+  if (!id) {
+    id = userId;
+  }
+  console.log({ userId, id });
   const isDeleted = await userModel.destroy({
-    where: {
-      [Op.or]: {
-        id: userId,
-        id
-      }
-    }
+    where: { id }
   });
   if (!isDeleted) {
-    return next(new ErrorHandler("User0 not found", 404));
+    return next(new ErrorHandler("User not found", 404));
   }
 
-  await wishlistModel.destroy({ where: { [Op.or]: { id, id: userId } } });
+  await wishlistModel.destroy({ where: { id } });
   res.status(200).json({ success: true, message: "User deleted successfully" });
 });
 

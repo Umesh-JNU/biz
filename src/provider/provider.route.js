@@ -18,6 +18,7 @@ const {
   getAvailability,
   disableAvailability,
   createProService,
+  getMyServices,
   getProServices,
   updateProService,
   deleteProService,
@@ -54,6 +55,7 @@ router.put("/disable-avail", auth, onlyProvider, disableAvailability);
 router.route("/service")
   .post(auth, onlyProvider, createProService)
   .get(auth, onlyProvider, getProServices);
+router.get("/service/all", auth, onlyProvider, getMyServices);
 router.route("/service/:id")
   .put(auth, onlyProvider, updateProService)
   .delete(auth, onlyProvider, deleteProService);
